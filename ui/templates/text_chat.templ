@@ -1,0 +1,55 @@
+package templates
+
+templ TextChat(title string) {
+	<script>
+		document.addEventListener("DOMContentLoaded",(e)=> {
+			let chatForm = document.querySelector("#chat_form")
+			
+			if(chatForm) {
+				chatForm.addEventListener('htmx:wsAfterSend', function(evt) {
+					let chatMessage = chatForm.querySelector("#chat_message")
+					if(chatMessage){
+						chatMessage.value = ""
+					}
+				});
+			}
+			
+		})
+	</script>
+	@Base(title) {
+		<div class="min-h-24 max-h-52 shadow-sm shadow-chatopia-2 p-2 rounded-md" hx-ext="ws" ws-connect="/chat-ws">
+			<div id="connection_status">
+				<p>
+					Connecting...
+				</p>
+			</div>
+			<div id="chat_bubbles" class="flex flex-col gap-1 pb-2"></div>
+			<div>
+				<form id="chat_form" class="flex items-end gap-2" ws-send hx-trigger="submit">
+					<input type="hidden" name="message_type" value="chat_message"/>
+					<textarea id="chat_message" name="chat_message" class="rounded-md text-chatopia-2 p-2 resize" maxlength="150"></textarea>
+					<button id="send_chat_button" type="submit" class="px-2 bg-chatopia-1 text-chatopia-2 rounded-md">Send</button>
+				</form>
+			</div>
+		</div>
+	}
+}
+
+templ ChatBubble(message string, self bool) {
+	<div id="chat_bubbles" hx-swap-oob="beforeend">
+		<div class="flex gap-1">
+			if self {
+				<p class="text-blue-500">
+					You:
+				</p>
+			} else {
+				<p class="text-red-500">
+					Stranger:
+				</p>
+			}
+			<p>
+				{ message }
+			</p>
+		</div>
+	</div>
+}

@@ -1,0 +1,19 @@
+package templates
+
+templ ConnectionStatusConnected() {
+	<div id="connection_status" hx-swap-oob="true">
+		<p class="text-green-500">Connected with stranger 🤝</p>
+	</div>
+}
+
+templ ConnectionStatusDisconnected() {
+	<div id="connection_status" hx-swap-oob="true">
+		<p class="text-red-500">Stranger disconnected 🏃</p>
+	</div>
+}
+
+templ ConnectionStatusNoClientsFound() {
+	<div id="connection_status" hx-swap-oob="true">
+		<p class="text-red-500">Can't find a stranger 😢</p>
+	</div>
+}
