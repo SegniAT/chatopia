@@ -80,8 +80,22 @@ func (h *Hub) Run() {
 
 				html = bytes.NewBuffer(nil)
 				partnerMessageComponent.Render(context.Background(), html)
-				partner.Send <- html.Bytes()
+				partner.SendMessage(html.Bytes())
+			case "typing":
+				client := message.From
+				if client == nil {
+					continue
+				}
 
+				partner := message.From.ChatPartner
+				if partner == nil {
+					continue
+				}
+
+				typingMessageComponent := templates.StrangerTyping()
+				html := bytes.NewBuffer(nil)
+				typingMessageComponent.Render(context.Background(), html)
+				partner.SendMessage(html.Bytes())
 			}
 
 		}

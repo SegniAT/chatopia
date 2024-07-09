@@ -17,3 +17,17 @@ templ ConnectionStatusNoClientsFound() {
 		<p class="text-red-500">Can't find a stranger 😢</p>
 	</div>
 }
+
+templ StrangerTyping() {
+	<div
+		id="chat_typing"
+		hx-swap-oob="true"
+		hx-on:htmx:load="clearTimeout(window.typingTimer); window.typingTimer = window.setTimeout(function() { htmx.find('#chat_typing').innerHTML = ''}, 3500)"
+		class="flex items-center gap-1 py-1"
+	>
+		<p class="text-red-500">
+			Stranger:
+		</p>
+		<img src="/assets/typing.gif" height="40"/>
+	</div>
+}

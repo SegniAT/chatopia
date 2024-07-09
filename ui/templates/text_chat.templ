@@ -6,28 +6,44 @@ templ TextChat(title string) {
 			let chatForm = document.querySelector("#chat_form")
 			
 			if(chatForm) {
-				chatForm.addEventListener('htmx:wsAfterSend', function(evt) {
+				chatForm.addEventListener('htmx:wsAfterSend', function(e) {
 					let chatMessage = chatForm.querySelector("#chat_message")
-					if(chatMessage){
-						chatMessage.value = ""
+					try {
+						let messageData = JSON.parse(e.detail.message)
+						if(messageData.message_type != "typing" && chatMessage){
+							chatMessage.value = ""
+						}
+					} catch(err) {
+						console.error("Error parsing ws message JSON:", err)
 					}
+					
 				});
 			}
 			
 		})
 	</script>
 	@Base(title) {
-		<div class="min-h-24 max-h-52 shadow-sm shadow-chatopia-2 p-2 rounded-md" hx-ext="ws" ws-connect="/chat-ws">
+		<div class="h-3/4 flex flex-col " hx-ext="ws" ws-connect="/chat-ws">
 			<div id="connection_status">
 				<p>
 					Connecting...
 				</p>
 			</div>
-			<div id="chat_bubbles" class="flex flex-col gap-1 pb-2"></div>
+			<div class="flex-grow p-2 my-2 shadow-sm shadow-chatopia-1 rounded-md">
+				<div id="chat_bubbles" class="flex flex-col gap-1 pb-1"></div>
+				<div id="chat_typing"></div>
+			</div>
 			<div>
-				<form id="chat_form" class="flex items-end gap-2" ws-send hx-trigger="submit">
-					<input type="hidden" name="message_type" value="chat_message"/>
-					<textarea id="chat_message" name="chat_message" class="rounded-md text-chatopia-2 p-2 resize" maxlength="150"></textarea>
+				<form id="chat_form" class="flex items-end gap-2" ws-send hx-trigger="submit" hx-vals='{"message_type":"chat_message"}'>
+					<textarea
+						id="chat_message"
+						name="chat_message"
+						class="rounded-md text-chatopia-2 p-2 resize"
+						maxlength="150"
+						ws-send
+						hx-vals='{"message_type":"typing"}'
+						hx-trigger="keyup changed throttle:2s"
+					></textarea>
 					<button id="send_chat_button" type="submit" class="px-2 bg-chatopia-1 text-chatopia-2 rounded-md">Send</button>
 				</form>
 			</div>

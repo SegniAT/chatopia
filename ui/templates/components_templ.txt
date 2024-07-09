@@ -1,3 +1,4 @@
 <div id=\"connection_status\" hx-swap-oob=\"true\"><p class=\"text-green-500\">Connected with stranger 🤝</p></div>
 <div id=\"connection_status\" hx-swap-oob=\"true\"><p class=\"text-red-500\">Stranger disconnected 🏃</p></div>
 <div id=\"connection_status\" hx-swap-oob=\"true\"><p class=\"text-red-500\">Can't find a stranger 😢</p></div>
+<div id=\"chat_typing\" hx-swap-oob=\"true\" hx-on:htmx:load=\"clearTimeout(window.typingTimer); window.typingTimer = window.setTimeout(function() { htmx.find(&#39;#chat_typing&#39;).innerHTML = &#39;&#39;}, 3500)\" class=\"flex items-center gap-1 py-1\"><p class=\"text-red-500\">Stranger:</p><img src=\"/assets/typing.gif\" height=\"40\"></div>
