@@ -44,7 +44,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 			return
 		}
 
-		clientSessionId := app.session.GetString(r, "userSessionId")
+		clientSessionId := app.session.GetString(r, "clientSessionId")
 		_, exists = app.hub.OnlineClients.GetClient(clientSessionId)
 		if !exists {
 			next.ServeHTTP(w, r)
@@ -59,7 +59,9 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 func (app *application) requireAuthentication(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !app.isAuthenticated(r) {
-			http.Redirect(w, r, "/", http.StatusSeeOther)
+			w.Header().Set("Hx-Redirect", "/")
+			w.WriteHeader(http.StatusSeeOther)
+			return
 		}
 
 		w.Header().Add("Cache-Control", "no-store")

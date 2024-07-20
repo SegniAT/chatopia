@@ -25,10 +25,12 @@ type Client struct {
 	Send chan []byte
 	Conn *websocket.Conn
 
-	SessionID   string
-	ChatPartner *Client
-	ChatType    string
-	Interests   []string
+	SessionID     string
+	ChatPartner   *Client
+	ChatType      string
+	Interests     []string
+	AutoReconnect bool
+	Searching     bool
 }
 
 func (client *Client) ReadPump() {

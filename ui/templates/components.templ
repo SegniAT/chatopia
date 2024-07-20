@@ -1,13 +1,42 @@
 package templates
 
+templ ConnectionStatusReady() {
+	<div id="connection_status" hx-swap-oob="true">
+		<p class="">Ready to connect</p>
+	</div>
+}
+
+templ ConnectionStatusSearching() {
+	<div id="connection_status" hx-swap-oob="true">
+		<p class="">Searching 🔎...</p>
+	</div>
+}
+
 templ ConnectionStatusConnected() {
 	<div id="connection_status" hx-swap-oob="true">
 		<p class="text-green-500">Connected with stranger 🤝</p>
 	</div>
 }
 
-templ ConnectionStatusDisconnected() {
-	<div id="connection_status" hx-swap-oob="true">
+templ ConnectionStatusDisconnected(autoReconnect bool) {
+	if autoReconnect {
+		<div
+			id="connection_status"
+			hx-swap-oob="true"
+			ws-send
+			hx-vals='{"message_type":"new_connection"}'
+			hx-trigger="load delay:1s"
+		>
+			<p class="text-red-500">Stranger disconnected 🏃</p>
+		</div>
+	}
+	<div
+		id="connection_status"
+		hx-swap-oob="true"
+		ws-send
+		hx-vals='{"message_type":"new_connection"}'
+		hx-trigger="load delay:1s"
+	>
 		<p class="text-red-500">Stranger disconnected 🏃</p>
 	</div>
 }
@@ -22,12 +51,52 @@ templ StrangerTyping() {
 	<div
 		id="chat_typing"
 		hx-swap-oob="true"
-		hx-on:htmx:load="clearTimeout(window.typingTimer); window.typingTimer = window.setTimeout(function() { htmx.find('#chat_typing').innerHTML = ''}, 3500)"
+		hx-on:htmx:load="clearTimeout(window.typingTimer); window.typingTimer = window.setTimeout(function() { htmx.find('#chat_typing').innerHTML = ''}, 3000)"
 		class="flex items-center gap-1 py-1"
 	>
 		<p class="text-red-500">
 			Stranger:
 		</p>
 		<img src="/assets/typing.gif" height="40"/>
+	</div>
+}
+
+templ NewStopNext(val string) {
+	<div id="new_stop">
+		<button
+			class="border border-chatopia-1 p-2"
+			type="button"
+			ws-send
+			hx-vals='{"message_type":"new_connection"}'
+			hx-trigger="click"
+		>
+			{ val }
+		</button>
+	</div>
+}
+
+templ AutoConnect(checked bool) {
+	<div id="auto_connect_checkbox">
+		if checked {
+			<input
+				type="checkbox"
+				name="auto"
+				value="true"
+				checked
+				ws-send
+				hx-vals='{"message_type":"auto_connect"}'
+				hx-trigger="change"
+			/>
+		} else {
+			<input
+				type="checkbox"
+				name="auto"
+				value="true"
+				ws-send
+				hx-vals='{"message_type":"auto_connect"}'
+				hx-trigger="change"
+			/>
+		}
+		<label for="auto">Auto connect</label>
 	</div>
 }

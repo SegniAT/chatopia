@@ -18,7 +18,18 @@ var upgrader = gorillaWS.Upgrader{
 }
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	component := templates.Home("Home")
+	interests := []string{}
+
+	exists := app.session.Exists(r, "clientSessionId")
+	if exists {
+		sessionId := app.session.GetString(r, "clientSessionId")
+		client, exists := app.hub.OnlineClients.GetClient(sessionId)
+		if exists {
+			interests = client.Interests
+		}
+	}
+
+	component := templates.Home("Home", interests)
 	component.Render(r.Context(), w)
 }
 
@@ -59,19 +70,23 @@ func (app *application) chatPost(w http.ResponseWriter, r *http.Request) {
 	app.session.Put(r, "clientSessionId", clientSessionId)
 
 	w.Header().Set("HX-Redirect", "/chat")
+	w.WriteHeader(http.StatusSeeOther)
 }
 
 func (app *application) chat(w http.ResponseWriter, r *http.Request) {
 	sessionId := app.session.GetString(r, "clientSessionId")
+	fmt.Println("chat handler")
 
 	client, bool := app.hub.OnlineClients.GetClient(sessionId)
 	if !bool {
 		w.Header().Set("HX-Redirect", "/")
+		w.WriteHeader(http.StatusSeeOther)
 		return
 	}
 
 	chatType := client.ChatType
-	component := templates.TextChat(fmt.Sprintf("Chat | %s", strings.ToUpper(chatType)))
+	fmt.Println("chatType: ", chatType)
+	component := templates.Chat(fmt.Sprintf("Chat | %s", strings.ToUpper(chatType)), chatType == "video")
 	component.Render(r.Context(), w)
 }
 
@@ -86,12 +101,14 @@ func (app *application) ServeWs(w http.ResponseWriter, r *http.Request) {
 	client, bool := app.hub.OnlineClients.GetClient(sessionId)
 	if !bool {
 		w.Header().Set("HX-Redirect", "/")
+		w.WriteHeader(http.StatusSeeOther)
 		return
 	}
 
 	client.Conn = conn
 	client.Hub = app.hub
 	client.Send = make(chan []byte, 256)
+	client.AutoReconnect = true
 
 	app.hub.Register <- client
 

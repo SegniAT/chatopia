@@ -1,4 +1,13 @@
+<div id=\"connection_status\" hx-swap-oob=\"true\"><p class=\"\">Ready to connect</p></div>
+<div id=\"connection_status\" hx-swap-oob=\"true\"><p class=\"\">Searching 🔎...</p></div>
 <div id=\"connection_status\" hx-swap-oob=\"true\"><p class=\"text-green-500\">Connected with stranger 🤝</p></div>
-<div id=\"connection_status\" hx-swap-oob=\"true\"><p class=\"text-red-500\">Stranger disconnected 🏃</p></div>
+<div id=\"connection_status\" hx-swap-oob=\"true\" ws-send hx-vals=\"{&#34;message_type&#34;:&#34;new_connection&#34;}\" hx-trigger=\"load delay:1s\"><p class=\"text-red-500\">Stranger disconnected 🏃</p></div>
+<div id=\"connection_status\" hx-swap-oob=\"true\" ws-send hx-vals=\"{&#34;message_type&#34;:&#34;new_connection&#34;}\" hx-trigger=\"load delay:1s\"><p class=\"text-red-500\">Stranger disconnected 🏃</p></div>
 <div id=\"connection_status\" hx-swap-oob=\"true\"><p class=\"text-red-500\">Can't find a stranger 😢</p></div>
-<div id=\"chat_typing\" hx-swap-oob=\"true\" hx-on:htmx:load=\"clearTimeout(window.typingTimer); window.typingTimer = window.setTimeout(function() { htmx.find(&#39;#chat_typing&#39;).innerHTML = &#39;&#39;}, 3500)\" class=\"flex items-center gap-1 py-1\"><p class=\"text-red-500\">Stranger:</p><img src=\"/assets/typing.gif\" height=\"40\"></div>
+<div id=\"chat_typing\" hx-swap-oob=\"true\" hx-on:htmx:load=\"clearTimeout(window.typingTimer); window.typingTimer = window.setTimeout(function() { htmx.find(&#39;#chat_typing&#39;).innerHTML = &#39;&#39;}, 3000)\" class=\"flex items-center gap-1 py-1\"><p class=\"text-red-500\">Stranger:</p><img src=\"/assets/typing.gif\" height=\"40\"></div>
+<div id=\"new_stop\"><button class=\"border border-chatopia-1 p-2\" type=\"button\" ws-send hx-vals=\"{&#34;message_type&#34;:&#34;new_connection&#34;}\" hx-trigger=\"click\">
+</button></div>
+<div id=\"auto_connect_checkbox\">
+<input type=\"checkbox\" name=\"auto\" value=\"true\" checked ws-send hx-vals=\"{&#34;message_type&#34;:&#34;auto_connect&#34;}\" hx-trigger=\"change\"> 
+<input type=\"checkbox\" name=\"auto\" value=\"true\" ws-send hx-vals=\"{&#34;message_type&#34;:&#34;auto_connect&#34;}\" hx-trigger=\"change\"> 
+<label for=\"auto\">Auto connect</label></div>

@@ -1,6 +1,6 @@
 package templates
 
-templ Home(title string) {
+templ Home(title string, interests []string) {
 	<script>
 		document.addEventListener("DOMContentLoaded",(e)=> {
 			const interestsInput = document.querySelector("#interests_input")
@@ -163,7 +163,7 @@ templ Home(title string) {
 				</form>
 			</div>
 			<div id="interest_form">
-				@InterestInput([]string{}, nil)
+				@InterestInput(interests, nil)
 			</div>
 		</div>
 	}

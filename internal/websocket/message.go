@@ -61,3 +61,12 @@ func (msg *Message) Decode(payload []byte) error {
 
 	return nil
 }
+
+func (msg *Message) Encode() ([]byte, error) {
+	payload, err := json.Marshal(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return payload, nil
+}

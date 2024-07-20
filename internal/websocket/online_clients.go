@@ -34,6 +34,10 @@ func (activeClients *OnlineClients) FindMatchingClient(sessionID string) *Client
 	if !exists {
 		return nil
 	}
+	currentClient.Searching = true
+	defer func() {
+		currentClient.Searching = false
+	}()
 
 	var bestMatch *Client
 	maxCommonInterests := -1
@@ -42,7 +46,8 @@ func (activeClients *OnlineClients) FindMatchingClient(sessionID string) *Client
 		client := value.(*Client)
 		if client.SessionID != currentClient.SessionID &&
 			client.ChatType == currentClient.ChatType &&
-			client.ChatPartner == nil && currentClient.ChatPartner == nil {
+			client.ChatPartner == nil && currentClient.ChatPartner == nil &&
+			(client.Searching || client.AutoReconnect) {
 
 			commonInterests := countCommonInterests(client.Interests, currentClient.Interests)
 			if commonInterests > maxCommonInterests {
