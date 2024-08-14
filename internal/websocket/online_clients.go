@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"sync"
+	"time"
 )
 
 type OnlineClients struct {
@@ -29,7 +30,24 @@ func (activeClients *OnlineClients) DeleteClient(sessionID string) {
 	activeClients.clients.Delete(sessionID)
 }
 
-func (activeClients *OnlineClients) FindMatchingClient(sessionID string) *Client {
+func (activeClients *OnlineClients) FindMatchingClient(
+	sessionID string,
+	retries int,
+	waitDuration time.Duration,
+) *Client {
+	for range retries {
+		partner := activeClients.findMatchingClientInternal(sessionID)
+		if partner != nil {
+			return partner
+		}
+
+		time.Sleep(waitDuration)
+	}
+
+	return nil
+}
+
+func (activeClients *OnlineClients) findMatchingClientInternal(sessionID string) *Client {
 	currentClient, exists := activeClients.GetClient(sessionID)
 	if !exists {
 		return nil
@@ -47,7 +65,7 @@ func (activeClients *OnlineClients) FindMatchingClient(sessionID string) *Client
 		if client.SessionID != currentClient.SessionID &&
 			client.ChatType == currentClient.ChatType &&
 			client.ChatPartner == nil && currentClient.ChatPartner == nil &&
-			(client.Searching || client.AutoReconnect) {
+			client.Searching {
 
 			commonInterests := countCommonInterests(client.Interests, currentClient.Interests)
 			if commonInterests > maxCommonInterests {
@@ -107,9 +125,3 @@ func countCommonInterests(interests1, interests2 []string) int {
 	}
 	return commonCount
 }
-
-/*
-func hasCommonInterests(interests1, interests1 []string) bool {
-
-}
-*/

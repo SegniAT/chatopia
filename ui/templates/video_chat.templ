@@ -38,6 +38,9 @@ templ VideoChat() {
 			let localVideo= document.querySelector("#local_video")
 			let remoteVideo= document.querySelector("#remote_video")
 
+			const PEERJS_SERVER="/"
+			const PEERJS_PORT=9000
+
 			const peer = null
 
 
@@ -56,8 +59,8 @@ templ VideoChat() {
 
 						const ID = parsedChatMessage['id'] 
 						peer = new Peer(ID, {
-							host:'/',
-							port:'9000'
+							host:PEERJS_SERVER,
+							port:PEERJS_PORT
 						})
 
 						// make call if you're the caller
@@ -65,7 +68,7 @@ templ VideoChat() {
 
 						if (localVideo){
 							navigator.mediaDevices.getUserMedia({
-								video:true, 
+								video:true,
 								audio:true
 							}).then(stream => {
 								addVideoStream(localVideo, stream)
@@ -100,7 +103,7 @@ templ VideoChat() {
 					}	
 
 					if (isDisconnectedMessage(message) && peer) {
-						peer.close()	
+						peer.close()
 					}
 				})
 
@@ -112,10 +115,10 @@ templ VideoChat() {
 	</script>
 	<div class="flex flex-col gap-2">
 		<div>
-			<video id="local_video" class="h-80 w-80 border-2 rounded-md border-chatopia-3" autoplay muted></video>
+			<video id="remote_video" class="h-80 w-80 border-2 rounded-md border-chatopia-3" autoplay muted></video>
 		</div>
 		<div>
-			<video id="remote_video" class="h-80 w-80 border-2 rounded-md border-chatopia-3" autoplay muted></video>
+			<video id="local_video" class="h-80 w-80 border-2 rounded-md border-chatopia-3" autoplay muted></video>
 		</div>
 	</div>
 }

@@ -43,12 +43,7 @@ func main() {
 	app := &application{
 		config:  cfg,
 		session: session,
-		hub: &internalWS.Hub{
-			OnlineClients: internalWS.NewOnlineClientsStore(),
-			Recieve:       make(chan *internalWS.Message),
-			Register:      make(chan *internalWS.Client),
-			Unregister:    make(chan *internalWS.Client),
-		},
+		hub:     internalWS.NewHub(),
 	}
 
 	app.background(func() {

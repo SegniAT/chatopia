@@ -18,24 +18,10 @@ templ ConnectionStatusConnected() {
 	</div>
 }
 
-templ ConnectionStatusDisconnected(autoReconnect bool) {
-	if autoReconnect {
-		<div
-			id="connection_status"
-			hx-swap-oob="true"
-			ws-send
-			hx-vals='{"message_type":"new_connection"}'
-			hx-trigger="load delay:1s"
-		>
-			<p class="text-red-500">Stranger disconnected 🏃</p>
-		</div>
-	}
+templ ConnectionStatusDisconnected() {
 	<div
 		id="connection_status"
 		hx-swap-oob="true"
-		ws-send
-		hx-vals='{"message_type":"new_connection"}'
-		hx-trigger="load delay:1s"
 	>
 		<p class="text-red-500">Stranger disconnected 🏃</p>
 	</div>
@@ -61,42 +47,30 @@ templ StrangerTyping() {
 	</div>
 }
 
-templ NewStopNext(val string) {
-	<div id="new_stop">
+templ ActionButton_NewChat() {
+	<div id="action_button_container">
 		<button
+			id="action_button"
 			class="border border-chatopia-1 p-2"
 			type="button"
 			ws-send
 			hx-vals='{"message_type":"new_connection"}'
 			hx-trigger="click"
 		>
-			{ val }
+			New Chat
 		</button>
 	</div>
 }
 
-templ AutoConnect(checked bool) {
-	<div id="auto_connect_checkbox">
-		if checked {
-			<input
-				type="checkbox"
-				name="auto"
-				value="true"
-				checked
-				ws-send
-				hx-vals='{"message_type":"auto_connect"}'
-				hx-trigger="change"
-			/>
-		} else {
-			<input
-				type="checkbox"
-				name="auto"
-				value="true"
-				ws-send
-				hx-vals='{"message_type":"auto_connect"}'
-				hx-trigger="change"
-			/>
-		}
-		<label for="auto">Auto connect</label>
+templ ActionButton_Searching() {
+	<div id="action_button_container">
+		<button
+			id="action_button"
+			class="border border-chatopia-1 p-2"
+			disabled
+			type="button"
+		>
+			Searching...
+		</button>
 	</div>
 }

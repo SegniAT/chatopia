@@ -108,7 +108,6 @@ func (app *application) ServeWs(w http.ResponseWriter, r *http.Request) {
 	client.Conn = conn
 	client.Hub = app.hub
 	client.Send = make(chan []byte, 256)
-	client.AutoReconnect = true
 
 	app.hub.Register <- client
 
