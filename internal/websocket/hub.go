@@ -117,7 +117,6 @@ func (h *Hub) handleUnregistration(client *Client, HtmlTemplates *preloadedTempl
 	if client == nil {
 		return
 	}
-	h.OnlineClients.DeleteClient(client.SessionID)
 
 	client.SendMessage(HtmlTemplates.ConnectionStatusDisconnected.Bytes())
 
