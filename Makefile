@@ -26,13 +26,10 @@ confirm:
 run/web:
 	go run ./cmd/web -port=${PORT}
 
-# run templ generation in watch mode to detect all .templ files and
-# re-create _templ.txt files on change, then send reload event to browser.
-# Default url: http://localhost:7331
-## live/templ: run templ generation in watch mode to detect all .templ files
-PHONY: live/templ
+## live/templ: # run templ generation in watch mode to detect all .templ files and re-create _templ.txt files on change, then send reload event to browser
+.PHONY: live/templ
 live/templ:
-	~/go/bin/templ generate --watch --proxy="http://localhost:${PORT}" --open-browser=true -v
+	~/go/bin/templ generate --watch --proxy="http://localhost:${PORT}" -v
 
 ## live/server: run air to detect any go file changes to re-build and re-run the server.
 .PHONY: live/server
