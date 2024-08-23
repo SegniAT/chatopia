@@ -11,11 +11,13 @@ import (
 	"github.com/SegniAdebaGodsSon/ui/templates"
 	"github.com/a-h/templ"
 	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 )
 
 const (
 	SEARCH_RETRIES    = 3
 	SEARCH_RETRY_WAIT = time.Second * 3
+	CLEANUP_PERIOD    = time.Second * 2
 )
 
 type Hub struct {
@@ -24,24 +26,29 @@ type Hub struct {
 	Unregister    chan *Client
 	Recieve       chan *Message
 	ctx           context.Context
-	cancel        context.CancelFunc
 	wg            sync.WaitGroup
 }
 
-func NewHub() *Hub {
-	ctx, cancel := context.WithCancel(context.Background())
+func NewHub(ctx context.Context) *Hub {
 	return &Hub{
 		OnlineClients: NewOnlineClientsStore(),
 		Recieve:       make(chan *Message),
 		Register:      make(chan *Client),
 		Unregister:    make(chan *Client),
 		ctx:           ctx,
-		cancel:        cancel,
 	}
 }
 
 func (h *Hub) Run() {
+	defer func() {
+		if r := recover(); r != nil {
+			slog.Error("panic in Hub.Run")
+		}
+	}()
+
 	slog.Info("Hub running")
+
+	go h.cleanDisconnectedClients()
 
 	HtmlTemplates := preloadTemplates()
 
@@ -64,6 +71,38 @@ func (h *Hub) Run() {
 			go h.handleMessage(message, HtmlTemplates)
 		}
 	}
+}
+
+func (h *Hub) cleanDisconnectedClients() {
+	go func() {
+		ticker := time.NewTicker(CLEANUP_PERIOD)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-h.ctx.Done():
+				return
+			case <-ticker.C:
+				h.checkClients()
+			}
+		}
+	}()
+}
+
+func (h *Hub) checkClients() {
+	h.OnlineClients.clients.Range(func(key, value any) bool {
+		client, ok := value.(*Client)
+		if !ok {
+			return true
+		}
+
+		err := client.Conn.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(pongWait))
+		if err != nil {
+			h.OnlineClients.DeleteClient(client.SessionID)
+		}
+
+		return true
+	})
 }
 
 func (h *Hub) handleRegistration(client *Client, HtmlTemplates *preloadedTemplates) {
@@ -204,6 +243,25 @@ func (h *Hub) handleNewCallMessage(message *Message, HtmlTemplates *preloadedTem
 		client.Connect(newPartner)
 		client.SendMessage(HtmlTemplates.ConnectionStatusConnected.Bytes())
 		newPartner.SendMessage(HtmlTemplates.ConnectionStatusConnected.Bytes())
+		if client.ChatType == "video" {
+			callerPeerId := uuid.NewString()
+			partnerPeerId := uuid.NewString()
+
+			callerMessage := Message{
+				Type:        "PEER_ID_PARTNER",
+				ChatMessage: fmt.Sprintf("{\"id\":\"%s\", \"partner_id\":\"%s\"}", callerPeerId, partnerPeerId),
+			}
+			callerMessageHtml, _ := callerMessage.Encode()
+
+			partnerMessage := Message{
+				Type:        "PEER_ID_CALLER",
+				ChatMessage: fmt.Sprintf("{\"id\":\"%s\", \"caller_id\":\"%s\"}", partnerPeerId, callerPeerId),
+			}
+			partnerMessageHtml, _ := partnerMessage.Encode()
+
+			client.SendMessage(callerMessageHtml)
+			partner.SendMessage(partnerMessageHtml)
+		}
 	}
 }
 

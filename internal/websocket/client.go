@@ -21,20 +21,33 @@ var (
 )
 
 type Client struct {
-	Hub  *Hub
-	Send chan []byte
-	Conn *websocket.Conn
+	Hub       *Hub
+	send      chan []byte
+	Conn      *websocket.Conn
+	Searching bool
 
 	SessionID   string
 	ChatPartner *Client
 	ChatType    string
 	Interests   []string
-	Searching   bool
+}
+
+func NewClient(sessionID string, chatType string, interests []string, hub *Hub) *Client {
+	return &Client{
+		Hub:       hub,
+		SessionID: sessionID,
+		ChatType:  chatType,
+		Interests: interests,
+		send:      make(chan []byte, 256),
+	}
 }
 
 func (client *Client) ReadPump() {
 	defer func() {
 		client.Hub.Unregister <- client
+		if r := recover(); r != nil {
+			slog.Error("panic in Client.ReadPump")
+		}
 	}()
 
 	client.Conn.SetReadLimit(maxMessageSize)
@@ -45,17 +58,22 @@ func (client *Client) ReadPump() {
 	})
 
 	for {
-		message := &Message{}
-		err := client.Conn.ReadJSON(message)
-		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				slog.Error("(readpump)", "error: ", err.Error())
+		select {
+		case <-client.Hub.ctx.Done():
+			return
+		default:
+			message := &Message{}
+			err := client.Conn.ReadJSON(message)
+			if err != nil {
+				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+					slog.Error("(readPump)", "error: ", err.Error())
+				}
+				break
 			}
-			break
-		}
 
-		message.From = client
-		client.Hub.Recieve <- message
+			message.From = client
+			client.Hub.Recieve <- message
+		}
 	}
 }
 
@@ -64,11 +82,18 @@ func (client *Client) WritePump() {
 	defer func() {
 		ticker.Stop()
 		client.Conn.Close()
+
+		if r := recover(); r != nil {
+			slog.Error("panic in Client.WritePump")
+		}
 	}()
 
 	for {
 		select {
-		case message, ok := <-client.Send:
+		case <-client.Hub.ctx.Done():
+			slog.Info("closing WritePump (cancellation)")
+			return
+		case message, ok := <-client.send:
 			client.Conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				// the hub closed the channel
@@ -96,7 +121,7 @@ func (client *Client) WritePump() {
 }
 
 func (client *Client) SendMessage(message []byte) {
-	client.Send <- message
+	client.send <- message
 }
 
 func (client *Client) Connect(partner *Client) error {

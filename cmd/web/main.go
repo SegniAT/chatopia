@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log/slog"
 	"sync"
@@ -25,6 +26,8 @@ type application struct {
 	wg      sync.WaitGroup
 	session *sessions.Session
 	hub     *internalWS.Hub
+	ctx     context.Context
+	cancel  context.CancelFunc
 }
 
 func main() {
@@ -40,16 +43,18 @@ func main() {
 	session.Lifetime = 12 * time.Hour
 	session.Secure = cfg.env == "production"
 
+	ctx, cancel := context.WithCancel(context.Background())
+
 	app := &application{
 		config:  cfg,
 		session: session,
-		hub:     internalWS.NewHub(),
+		hub:     internalWS.NewHub(ctx),
+		ctx:     ctx,
+		cancel:  cancel,
 	}
 
-	app.background(func() {
-		slog.Info("Starting Hub")
-		app.hub.Run()
-	})
+	slog.Info("Starting Hub")
+	go app.hub.Run()
 
 	err := app.serve()
 

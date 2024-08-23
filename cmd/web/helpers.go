@@ -23,28 +23,39 @@ func (app *application) background(fn func()) {
 	}()
 }
 
-func (app *application) validateInterests(w http.ResponseWriter, r *http.Request) ([]string, error) {
+func (app *application) extractInterests(w http.ResponseWriter, r *http.Request) ([]string, error) {
 	const MAX_REQUEST_SIZE = 1 * 1024
+	var interests []string
 
 	r.Body = http.MaxBytesReader(w, r.Body, MAX_REQUEST_SIZE)
-	r.ParseForm()
+	err := r.ParseForm()
+	if err != nil {
+		return interests, err
+	}
 
+	interests = r.Form["interests[]"]
+
+	return interests, nil
+}
+
+func (app *application) validateInterests(w http.ResponseWriter, r *http.Request) ([]string, error) {
 	interests := []string{}
 	var interestsErr error
 
-	formInterests := r.Form.Get("interests")
+	interestsRaw, err := app.extractInterests(w, r)
+	if err != nil {
+		return interests, err
+	}
 
-	interestsInp := strings.Split(formInterests, SEPARATOR)
-
-	if formInterests == "" || len(interestsInp) == 0 {
+	if len(interestsRaw) == 0 {
 		return interests, interestsErr
 	}
 
-	if len(interestsInp) > 3 {
+	if len(interestsRaw) > 3 {
 		return interests, fmt.Errorf("maximum of only 3 interests allowed")
 	}
 
-	for _, interest := range interestsInp {
+	for _, interest := range interestsRaw {
 		interest = strings.Trim(interest, " ")
 		interest = strings.ReplaceAll(interest, SEPARATOR, "_")
 

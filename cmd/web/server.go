@@ -31,6 +31,9 @@ func (app *application) serve() error {
 
 		slog.Info("shutting down server", "signal", s.String())
 
+		// cancel background tasks
+		app.cancel()
+
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 

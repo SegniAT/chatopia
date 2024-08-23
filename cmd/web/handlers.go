@@ -18,18 +18,7 @@ var upgrader = gorillaWS.Upgrader{
 }
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	interests := []string{}
-
-	exists := app.session.Exists(r, "clientSessionId")
-	if exists {
-		sessionId := app.session.GetString(r, "clientSessionId")
-		client, exists := app.hub.OnlineClients.GetClient(sessionId)
-		if exists {
-			interests = client.Interests
-		}
-	}
-
-	component := templates.Home("Home", interests)
+	component := templates.Home("Home", []string{})
 	component.Render(r.Context(), w)
 }
 
@@ -57,11 +46,7 @@ func (app *application) chatPost(w http.ResponseWriter, r *http.Request) {
 
 	clientSessionId := uuid.NewString()
 
-	client := &internalWS.Client{
-		SessionID: clientSessionId,
-		ChatType:  chatType,
-		Interests: interests,
-	}
+	client := internalWS.NewClient(clientSessionId, chatType, interests, app.hub)
 
 	app.hub.OnlineClients.StoreClient(client.SessionID, client)
 
@@ -75,7 +60,6 @@ func (app *application) chatPost(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) chat(w http.ResponseWriter, r *http.Request) {
 	sessionId := app.session.GetString(r, "clientSessionId")
-	fmt.Println("chat handler")
 
 	client, bool := app.hub.OnlineClients.GetClient(sessionId)
 	if !bool {
@@ -85,7 +69,6 @@ func (app *application) chat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	chatType := client.ChatType
-	fmt.Println("chatType: ", chatType)
 	component := templates.Chat(fmt.Sprintf("Chat | %s", strings.ToUpper(chatType)), chatType == "video")
 	component.Render(r.Context(), w)
 }
@@ -106,12 +89,9 @@ func (app *application) ServeWs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	client.Conn = conn
-	client.Hub = app.hub
-	client.Send = make(chan []byte, 256)
 
 	app.hub.Register <- client
 
 	go client.WritePump()
 	go client.ReadPump()
-
 }

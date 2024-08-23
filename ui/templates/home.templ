@@ -2,142 +2,168 @@ package templates
 
 templ Home(title string, interests []string) {
 	<script>
+		let showError=(error)=>{
+			const errInterests = document.querySelector("#interests_error")
+			const errInterestsClassList = errInterests.classList
+			errInterests.innerText = error
+			errInterestsClassList.remove("hidden")
+			errInterestsClassList.add("block")
+		}
+
+		let hideError=()=> {
+			const errInterests = document.querySelector("#interests_error")
+			const errInterestsClassList = errInterests.classList
+			errInterests.innerText = ""
+			errInterestsClassList.add("hidden")
+			errInterestsClassList.remove("block")
+		}
+
+		let validateInterest = (interest) => {
+			const interest_pills = document.querySelector("#interest_pills")
+			const errInterestsClassList = document.querySelector("#interests_error").classList
+
+			// check if 3<
+			if (interest_pills.childElementCount == 3) {
+				throw "maximum of only 3 interests allowed"
+			}else {
+				hideError()
+			}
+			let newInterest = interest.trim().toLowerCase()
+			if(newInterest.length == 0) {
+				throw "interest too short (min 1 character)"
+			}
+
+			if (newInterest.length > 25) {
+				throw "interest too long (max 25 characters)"
+			}
+
+			return newInterest
+		}
+
+		let addInterestPill = (newInterest) => {
+			const interestPill = document.createElement("div")
+			const interestPillRemove = document.createElement("span")
+			interestPillRemove .classList.add("remove_interest_pill")
+			interestPillRemove.textContent = "x"
+	
+			let pillStyle = "flex justify-center items-center pl-2 h-6 bg-chatopia-2 border-l border-chatopia-3 shadow-sm shadow-chatopia-3 rounded-md"
+			let pillRemoveStyle = "flex items-center font-bold text-md h-full ml-2 px-1 rounded-md rounded-l-none bg-red-600 text-chatopia-5 cursor-pointer"	
+
+			interestPill.classList.add(...pillStyle.split(" "))
+			interestPillRemove.classList.add(...pillRemoveStyle.split(" "))
+
+			interestPill.textContent = newInterest
+			interestPill.appendChild(interestPillRemove)
+
+			interest_pills.appendChild(interestPill)
+
+
+			interestPillRemove.addEventListener("click", ()=>{
+				interest_pills.removeChild(interestPill)
+			})
+		}
+
+		let initializeInterests = () => {
+			const interest_pills = document.querySelector("#interest_pills")
+			const interestsInput = document.querySelector("#interests_input")		
+
+			if (interestsInput){
+				interestsInput.addEventListener("keydown", (e) => {
+					if (e.key==="Enter"){
+						e.preventDefault()
+
+						let newInterest = e.target.value
+
+						try {
+							newInterest = validateInterest(newInterest)	
+						}catch(err){
+							showError(err)
+							return
+						}
+
+						addInterestPill(newInterest)
+						e.target.value = ""
+					}
+				});
+			}
+
+			const remove_interest_pill = document.querySelectorAll(".remove_interest_pill")
+
+			remove_interest_pill.forEach(removeSpan => {
+				removeSpan.addEventListener("click", (e) => {
+					const pill = e.target.parentElement
+					if (pill) {
+						pill.remove()
+					}
+				})
+			})
+		}
+
+		let getInterestsFromPills=()=>{
+			const interest_pills = document.querySelector("#interest_pills")
+			let interests = []
+
+			console.log("interest_pills:??? ", interest_pills)
+			if(!interest_pills) {
+				console.log("can't find interest pills container element")
+				return interests
+			}
+
+			interest_pills.childNodes.forEach(node => {
+				let text = node.textContent
+				if(text.length > 0) {
+					// cut out the 'X'
+					text = text.slice(0, text.length-1)
+				}
+				interests.push(text)
+			})
+			return interests
+		}
+
+		let updateInterestsLocalStorage=()=>{
+			let interests = getInterestsFromPills()
+			localStorage.setItem("interests", JSON.stringify(interests))
+		}
+
+		let loadInterestsFromLocalStorage=()=>{
+			let savedInterests = localStorage.getItem("interests")
+			if (!savedInterests) {
+				return
+			}
+
+			savedInterests = JSON.parse(savedInterests)
+			let len = savedInterests.length
+
+			if(len> 3) {
+				savedInterests = savedInterests.slice(0, 3)
+				return
+			}
+
+			savedInterests.forEach(interest => addInterestPill(interest ))
+		}
+
 		document.addEventListener("DOMContentLoaded",(e)=> {
 			const interestsInput = document.querySelector("#interests_input")
-			const remove_interest_tablet = document.querySelector(".remove_interest_tablet")
-			const SEPARATOR = "|"
+			const remove_interest_pill = document.querySelector(".remove_interest_pill")
 
-			let showError=(error)=>{
-				const errInterests = document.querySelector("#interests_error")
-				const errInterestsClassList = errInterests.classList
-				errInterests.innerText = error
-				errInterestsClassList.remove("hidden")
-				errInterestsClassList.add("block")
-			}
-
-			let hideError=()=> {
-				const errInterests = document.querySelector("#interests_error")
-				const errInterestsClassList = errInterests.classList
-				errInterests.innerText = ""
-				errInterestsClassList.add("hidden")
-				errInterestsClassList.remove("block")
-			}
-
-			let updateValues = () => {
-				const interestsVideo = document.querySelector("#interests_video")
-				const interestsText = document.querySelector("#interests_text")
-				const interest_tablets = document.querySelector("#interest_tablets")
-
-				let interests = []	
-				interest_tablets.childNodes.forEach(node => {
-					let text = node.textContent
-					if(text.length > 0) {
-						text = text.slice(0, text.length-1)
-					}
-
-					try {
-						text = validateInterest(text)
-					}catch(err){
-						showError(err)
-						return
-					}
-
-					interests.push(text)
-				})
-
-				interestsVideo.value = interests.join(SEPARATOR)
-				interestsText.value = interests.join(SEPARATOR)
-			}
-
-			let validateInterest = (interest) => {
-				const interest_tablets = document.querySelector("#interest_tablets")
-				const errInterestsClassList = document.querySelector("#interests_error").classList
-
-				// check if 3<
-				if (interest_tablets.childElementCount>= 3) {
-					throw "maximum of only 3 interests allowed"
-				}else {
-					hideError()
-				}
-
-				let newInterest = interest.trim().toLowerCase().replaceAll(SEPARATOR, "_")
-				if(newInterest.length == 0) {
-					throw "interest too short (min 1 character)"
-				}
-
-				if (newInterest.length > 25) {
-					throw "interest too long (max 25 characters)"
-				}
-
-				return newInterest
-			}
+			// load previously submitted interests
+			loadInterestsFromLocalStorage()
 			
-			let initializeInterests = () => {
-				const interest_tablets = document.querySelector("#interest_tablets")
-				const interestsInput = document.querySelector("#interests_input")		
-
-				if (interestsInput){
-					interestsInput.addEventListener("keydown", (e) => {
-						if (e.key==="Enter"){
-							e.preventDefault()
-						
-							let newInterest = e.target.value
-
-							try {
-								newInterest = validateInterest(newInterest)	
-							}catch(err){
-								showError(err)
-								return
-							}
-
-							const interestTablet = document.createElement("div")
-
-							const interestTabletRemove = document.createElement("span")
-							interestTabletRemove .classList.add("remove_interest_tablet")
-							interestTabletRemove.textContent = "x"
-	
-							let tabletStyle = "flex justify-center items-center pl-2 h-6 bg-chatopia-2 border-l border-chatopia-3 shadow-sm shadow-chatopia-3 rounded-md"
-							let tabletRemoveStyle = "flex items-center font-bold text-md h-full ml-2 px-1 rounded-md rounded-l-none bg-red-600 text-chatopia-5 cursor-pointer"	
-
-							interestTablet.classList.add(...tabletStyle.split(" "))
-							interestTabletRemove.classList.add(...tabletRemoveStyle.split(" "))
-
-							interestTablet.textContent = newInterest
-							interestTablet.appendChild(interestTabletRemove)
-
-							interest_tablets.appendChild(interestTablet)
-
-							e.target.value = ""
-						
-							updateValues()
-
-							interestTabletRemove.addEventListener("click", ()=>{
-								interest_tablets.removeChild(interestTablet)
-								updateValues()
-							})
-						}
-					});
-				}
-
-				const remove_interest_tablet = document.querySelectorAll(".remove_interest_tablet")
-				remove_interest_tablet.forEach(button => {
-					button.addEventListener("click", (e) => {
-						const tablet = e.target.parentElement
-						if (tablet) {
-							interest_tablets.removeChild(tablet)
-							updateValues()
-						}
-					})
-				})
-			} // initializeInterests
-
+			// Reinitialize the interests listeners on first load
 			initializeInterests()
 
-			// Reinitialize the interests when the form is re-rendered
+			// Reinitialize the interests listeners when the form is re-rendered
 			document.querySelector("#interest_form").addEventListener("htmx:afterSwap", (e) => {
 				initializeInterests()
 			})
 
+			// remember the users interests
+			document.querySelectorAll("#video_chat_form, #text_chat_form").forEach(form => {
+				form.addEventListener("htmx:beforeRequest", (e) => {
+					updateInterestsLocalStorage()
+				});
+
+			})
 		});
 
 	</script>
@@ -153,12 +179,24 @@ templ Home(title string, interests []string) {
 		<div>
 			<p class="">Start chatting:</p>
 			<div class="flex justify-start gap-2 p-2">
-				<form hx-post="/chat/video" hx-target="#interest_form">
-					<input id="interests_video" class="hidden" type="text" name="interests"/>
+				<form
+					id="video_chat_form"
+					hx-post="/chat/video"
+					hx-target="#interest_form"
+					hx-vals='js:{
+						"interests[]": getInterestsFromPills()
+					}'
+				>
 					<button class="rounded-md border-2 border-chatopia-1 bg-chatopia-2 text-chatopia-1 py-1 px-4 font-semibold" type="submit">Video</button>
 				</form>
-				<form hx-post="/chat/text" hx-target="#interest_form">
-					<input id="interests_text" class="hidden" type="text" name="interests"/>
+				<form
+					id="text_chat_form"
+					hx-post="/chat/text"
+					hx-target="#interest_form"
+					hx-vals='js:{
+						"interests[]": getInterestsFromPills()
+					}'
+				>
 					<button class="rounded-md border-2 border-chatopia-3 bg-chatopia-3 text-chatopia-5 py-1 px-5 font-semibold" type="submit">Text</button>
 				</form>
 			</div>
@@ -172,7 +210,7 @@ templ Home(title string, interests []string) {
 templ InterestInput(interests []string, interestsError error) {
 	<p>Interests (optional):</p>
 	<div class="flex flex-col items-start">
-		<div id="interest_tablets" class="flex gap-2 py-2">
+		<div id="interest_pills" class="flex gap-2 py-2">
 			for _, interest := range interests {
 				<span class="flex justify-center items-center pl-2 h-6 bg-chatopia-2 border-l border-chatopia-3 shadow-sm shadow-chatopia-3 rounded-md">
 					{ interest }

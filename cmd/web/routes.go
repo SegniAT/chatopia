@@ -10,7 +10,7 @@ func (app *application) routes() http.Handler {
 	dynamicMiddleware := alice.New(app.session.Enable, app.authenticate, app.requireAuthentication)
 	mux := http.NewServeMux()
 
-	mux.Handle("GET /", app.session.Enable(app.authenticate(http.HandlerFunc(app.home))))
+	mux.HandleFunc("GET /", app.home)
 	mux.HandleFunc("GET /about", app.about)
 
 	mux.Handle("POST /chat/{type}", app.session.Enable(http.HandlerFunc(app.chatPost)))

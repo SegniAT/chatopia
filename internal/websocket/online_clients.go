@@ -72,7 +72,6 @@ func (activeClients *OnlineClients) findMatchingClientInternal(sessionID string)
 				bestMatch = client
 				maxCommonInterests = commonInterests
 
-				// maximum common interests
 				if maxCommonInterests == 3 {
 					return false
 				}
