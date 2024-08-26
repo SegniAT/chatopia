@@ -56,16 +56,15 @@ templ Home(title string, interests []string) {
 			interestPill.appendChild(interestPillRemove)
 
 			interest_pills.appendChild(interestPill)
-
-
-			interestPillRemove.addEventListener("click", ()=>{
-				interest_pills.removeChild(interestPill)
+			
+			interestPillRemove.addEventListener("click", () => {
+				interestPill.remove()
 			})
 		}
 
 		let initializeInterests = () => {
 			const interest_pills = document.querySelector("#interest_pills")
-			const interestsInput = document.querySelector("#interests_input")		
+			const interestsInput = document.querySelector("#interests_input")
 
 			if (interestsInput){
 				interestsInput.addEventListener("keydown", (e) => {
@@ -75,7 +74,7 @@ templ Home(title string, interests []string) {
 						let newInterest = e.target.value
 
 						try {
-							newInterest = validateInterest(newInterest)	
+							newInterest = validateInterest(newInterest)
 						}catch(err){
 							showError(err)
 							return
@@ -103,7 +102,6 @@ templ Home(title string, interests []string) {
 			const interest_pills = document.querySelector("#interest_pills")
 			let interests = []
 
-			console.log("interest_pills:??? ", interest_pills)
 			if(!interest_pills) {
 				console.log("can't find interest pills container element")
 				return interests
@@ -139,7 +137,7 @@ templ Home(title string, interests []string) {
 				return
 			}
 
-			savedInterests.forEach(interest => addInterestPill(interest ))
+			savedInterests.forEach(interest => addInterestPill(interest))
 		}
 
 		document.addEventListener("DOMContentLoaded",(e)=> {
@@ -147,7 +145,7 @@ templ Home(title string, interests []string) {
 			const remove_interest_pill = document.querySelector(".remove_interest_pill")
 
 			// load previously submitted interests
-			loadInterestsFromLocalStorage()
+			loadInterestsFromLocalStorage(interestsInput)
 			
 			// Reinitialize the interests listeners on first load
 			initializeInterests()

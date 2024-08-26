@@ -11,13 +11,12 @@ import (
 	"github.com/SegniAdebaGodsSon/ui/templates"
 	"github.com/a-h/templ"
 	"github.com/google/uuid"
-	"github.com/gorilla/websocket"
 )
 
 const (
 	SEARCH_RETRIES    = 3
 	SEARCH_RETRY_WAIT = time.Second * 3
-	CLEANUP_PERIOD    = time.Second * 2
+	CLEANUP_PERIOD    = time.Second * 10
 )
 
 type Hub struct {
@@ -96,8 +95,7 @@ func (h *Hub) checkClients() {
 			return true
 		}
 
-		err := client.Conn.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(pongWait))
-		if err != nil {
+		if !client.IsActive() {
 			h.OnlineClients.DeleteClient(client.SessionID)
 		}
 
@@ -105,19 +103,15 @@ func (h *Hub) checkClients() {
 	})
 }
 
-func (h *Hub) handleRegistration(client *Client, HtmlTemplates *preloadedTemplates) {
-	defer h.wg.Done()
-
-	if client == nil {
-		return
-	}
-
-	// TODO: HANDLE "searching"/disabled button when searching starts and send "end call" button when done searching (if found)
+func (h *Hub) connectToClient(client *Client, HtmlTemplates *preloadedTemplates) {
 	client.SendMessage(HtmlTemplates.ConnectionStatusSearching.Bytes())
+	client.SendMessage(HtmlTemplates.ActionBtnSearching.Bytes())
 	partner := h.OnlineClients.FindMatchingClient(client.SessionID, SEARCH_RETRIES, SEARCH_RETRY_WAIT)
 
 	if partner == nil {
 		client.SendMessage(HtmlTemplates.ConnectionStatusNoClientsFound.Bytes())
+		client.SendMessage(HtmlTemplates.ActionBtnNew.Bytes())
+		return
 	} else {
 		err := client.Connect(partner)
 		if err != nil {
@@ -127,6 +121,7 @@ func (h *Hub) handleRegistration(client *Client, HtmlTemplates *preloadedTemplat
 
 		client.SendMessage(HtmlTemplates.ConnectionStatusConnected.Bytes())
 		partner.SendMessage(HtmlTemplates.ConnectionStatusConnected.Bytes())
+		client.SendMessage(HtmlTemplates.ActionBtnNew.Bytes())
 
 		if client.ChatType == "video" {
 			callerPeerId := uuid.NewString()
@@ -148,6 +143,16 @@ func (h *Hub) handleRegistration(client *Client, HtmlTemplates *preloadedTemplat
 			partner.SendMessage(partnerMessageHtml)
 		}
 	}
+}
+
+func (h *Hub) handleRegistration(client *Client, HtmlTemplates *preloadedTemplates) {
+	defer h.wg.Done()
+
+	if client == nil {
+		return
+	}
+
+	h.connectToClient(client, HtmlTemplates)
 }
 
 func (h *Hub) handleUnregistration(client *Client, HtmlTemplates *preloadedTemplates) {
@@ -227,42 +232,13 @@ func (h *Hub) handleNewCallMessage(message *Message, HtmlTemplates *preloadedTem
 	}
 
 	// Disconnect
-	client.SendMessage(HtmlTemplates.ConnectionStatusDisconnected.Bytes())
-
 	partner := client.Disconnect()
 	if partner != nil {
+		client.SendMessage(HtmlTemplates.ConnectionStatusDisconnected.Bytes())
 		partner.SendMessage(HtmlTemplates.ConnectionStatusDisconnected.Bytes())
 	}
 
-	// try connecting to another client
-	client.SendMessage(HtmlTemplates.ConnectionStatusSearching.Bytes())
-	newPartner := h.OnlineClients.FindMatchingClient(client.SessionID, SEARCH_RETRIES, SEARCH_RETRY_WAIT)
-	if newPartner == nil {
-		client.SendMessage(HtmlTemplates.ConnectionStatusNoClientsFound.Bytes())
-	} else {
-		client.Connect(newPartner)
-		client.SendMessage(HtmlTemplates.ConnectionStatusConnected.Bytes())
-		newPartner.SendMessage(HtmlTemplates.ConnectionStatusConnected.Bytes())
-		if client.ChatType == "video" {
-			callerPeerId := uuid.NewString()
-			partnerPeerId := uuid.NewString()
-
-			callerMessage := Message{
-				Type:        "PEER_ID_PARTNER",
-				ChatMessage: fmt.Sprintf("{\"id\":\"%s\", \"partner_id\":\"%s\"}", callerPeerId, partnerPeerId),
-			}
-			callerMessageHtml, _ := callerMessage.Encode()
-
-			partnerMessage := Message{
-				Type:        "PEER_ID_CALLER",
-				ChatMessage: fmt.Sprintf("{\"id\":\"%s\", \"caller_id\":\"%s\"}", partnerPeerId, callerPeerId),
-			}
-			partnerMessageHtml, _ := partnerMessage.Encode()
-
-			client.SendMessage(callerMessageHtml)
-			partner.SendMessage(partnerMessageHtml)
-		}
-	}
+	h.connectToClient(client, HtmlTemplates)
 }
 
 func (h *Hub) handleEndCallMessage(message *Message, HtmlTemplates *preloadedTemplates) {

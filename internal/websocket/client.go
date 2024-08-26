@@ -42,11 +42,21 @@ func NewClient(sessionID string, chatType string, interests []string, hub *Hub) 
 	}
 }
 
+func (client *Client) IsActive() bool {
+	var err error
+	if client.Conn == nil {
+		return false
+	}
+	err = client.Conn.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(pongWait))
+
+	return err == nil
+}
+
 func (client *Client) ReadPump() {
 	defer func() {
 		client.Hub.Unregister <- client
 		if r := recover(); r != nil {
-			slog.Error("panic in Client.ReadPump")
+			slog.Error("panic in Client.ReadPump", "err: ", r)
 		}
 	}()
 
@@ -84,7 +94,7 @@ func (client *Client) WritePump() {
 		client.Conn.Close()
 
 		if r := recover(); r != nil {
-			slog.Error("panic in Client.WritePump")
+			slog.Error("panic in Client.WritePump", "err: ", r)
 		}
 	}()
 

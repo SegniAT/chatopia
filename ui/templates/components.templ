@@ -19,10 +19,7 @@ templ ConnectionStatusConnected() {
 }
 
 templ ConnectionStatusDisconnected() {
-	<div
-		id="connection_status"
-		hx-swap-oob="true"
-	>
+	<div id="connection_status" hx-swap-oob="true">
 		<p class="text-red-500">Stranger disconnected 🏃</p>
 	</div>
 }
@@ -72,5 +69,11 @@ templ ActionButton_Searching() {
 		>
 			Searching...
 		</button>
+	</div>
+}
+
+templ InterestPill(interest string) {
+	<div class="flex justify-center items-center px-2 h-6 bg-chatopia-2 border-l border-chatopia-3 shadow-sm shadow-chatopia-3 rounded-md">
+		{ interest }
 	</div>
 }

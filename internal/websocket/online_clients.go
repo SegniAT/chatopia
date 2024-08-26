@@ -62,21 +62,36 @@ func (activeClients *OnlineClients) findMatchingClientInternal(sessionID string)
 
 	activeClients.clients.Range(func(_, value interface{}) bool {
 		client := value.(*Client)
-		if client.SessionID != currentClient.SessionID &&
-			client.ChatType == currentClient.ChatType &&
-			client.ChatPartner == nil && currentClient.ChatPartner == nil &&
-			client.Searching {
+		if !client.IsActive() {
+			return true
+		}
 
-			commonInterests := countCommonInterests(client.Interests, currentClient.Interests)
-			if commonInterests > maxCommonInterests {
-				bestMatch = client
-				maxCommonInterests = commonInterests
+		if client.SessionID == currentClient.SessionID {
+			return true
+		}
 
-				if maxCommonInterests == 3 {
-					return false
-				}
+		if client.ChatType != currentClient.ChatType {
+			return true
+		}
+
+		if client.ChatPartner != nil || currentClient.ChatPartner != nil {
+			return true
+		}
+
+		if client.Searching {
+			return true
+		}
+
+		commonInterests := countCommonInterests(client.Interests, currentClient.Interests)
+		if commonInterests > maxCommonInterests {
+			bestMatch = client
+			maxCommonInterests = commonInterests
+
+			if maxCommonInterests == 3 {
+				return false
 			}
 		}
+
 		return true
 	})
 
@@ -88,11 +103,28 @@ func (activeClients *OnlineClients) findMatchingClientInternal(sessionID string)
 	var anyClient *Client
 	activeClients.clients.Range(func(_, value interface{}) bool {
 		client := value.(*Client)
-		if client.SessionID != currentClient.SessionID && currentClient.ChatType == currentClient.ChatType {
-			anyClient = client
-			return false
+		if !client.IsActive() {
+			return true
 		}
-		return true
+
+		if client.SessionID == currentClient.SessionID {
+			return true
+		}
+
+		if client.ChatType != currentClient.ChatType {
+			return true
+		}
+
+		if client.ChatPartner != nil || currentClient.ChatPartner != nil {
+			return true
+		}
+
+		if client.Searching {
+			return true
+		}
+
+		anyClient = client
+		return false
 	})
 
 	if anyClient != nil && currentClient.ChatPartner == nil && anyClient.ChatPartner == nil {

@@ -1,0 +1,12 @@
+services:
+  web:
+    image: segniadeba/chatopia-web
+    ports:
+      - "5000:5000"
+    depends_on:
+      - peerjs-server
+
+  peerjs-server:
+    image: segniadeba/peerjs-server
+    ports:
+      - "9000:9000"

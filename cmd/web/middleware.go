@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"net/http"
 )
@@ -65,7 +64,6 @@ func (app *application) requireAuthentication(next http.Handler) http.Handler {
 			return
 		}
 
-		w.Header().Add("Cache-Control", "no-store")
 		next.ServeHTTP(w, r)
 	})
 }

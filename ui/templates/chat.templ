@@ -1,6 +1,6 @@
 package templates
 
-templ Chat(title string, video bool) {
+templ Chat(title string, video bool, interests []string) {
 	<script>
 	</script>
 	@Base(title) {
@@ -12,6 +12,19 @@ templ Chat(title string, video bool) {
 					</div>
 				}
 				<div class="flex flex-col h-full flex-grow">
+					<div id="connection_status">
+						<p>
+							Connecting...
+						</p>
+					</div>
+					<div id="interests_chat" class="flex gap-1 my-1">
+						if len(interests) > 0 {
+							<span class="text-chatopia-4">Interests: </span>
+							for _, interest:=range interests {
+								@InterestPill(interest)
+							}
+						}
+					</div>
 					@TextChat()
 				</div>
 			</div>

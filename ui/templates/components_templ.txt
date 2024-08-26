@@ -1,0 +1,10 @@
+<div id=\"connection_status\" hx-swap-oob=\"true\"><p class=\"\">Ready to connect</p></div>
+<div id=\"connection_status\" hx-swap-oob=\"true\"><p class=\"\">Searching 🔎...</p></div>
+<div id=\"connection_status\" hx-swap-oob=\"true\"><p class=\"text-green-500\">Connected with stranger 🤝</p></div>
+<div id=\"connection_status\" hx-swap-oob=\"true\"><p class=\"text-red-500\">Stranger disconnected 🏃</p></div>
+<div id=\"connection_status\" hx-swap-oob=\"true\"><p class=\"text-red-500\">Can't find a stranger 😢</p></div>
+<div id=\"chat_typing\" hx-swap-oob=\"true\" hx-on:htmx:load=\"clearTimeout(window.typingTimer); window.typingTimer = window.setTimeout(function() { htmx.find(&#39;#chat_typing&#39;).innerHTML = &#39;&#39;}, 3000)\" class=\"flex items-center gap-1 py-1\"><p class=\"text-red-500\">Stranger:</p><img src=\"/assets/typing.gif\" height=\"40\"></div>
+<div id=\"action_button_container\"><button id=\"action_button\" class=\"border border-chatopia-1 p-2\" type=\"button\" ws-send hx-vals=\"{&#34;message_type&#34;:&#34;new_connection&#34;}\" hx-trigger=\"click\">New Chat</button></div>
+<div id=\"action_button_container\"><button id=\"action_button\" class=\"border border-chatopia-1 p-2\" disabled type=\"button\">Searching...</button></div>
+<div class=\"flex justify-center items-center px-2 h-6 bg-chatopia-2 border-l border-chatopia-3 shadow-sm shadow-chatopia-3 rounded-md\">
+</div>
