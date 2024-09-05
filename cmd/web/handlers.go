@@ -27,6 +27,11 @@ func (app *application) about(w http.ResponseWriter, r *http.Request) {
 	component.Render(r.Context(), w)
 }
 
+func (app *application) liveUsers(w http.ResponseWriter, r *http.Request) {
+	component := templates.LiveUsers(app.hub.OnlineClients.Size())
+	component.Render(r.Context(), w)
+}
+
 func (app *application) chatPost(w http.ResponseWriter, r *http.Request) {
 	interests, interestsErr := app.validateInterests(w, r)
 	r.ParseForm()

@@ -13,6 +13,16 @@ func NewOnlineClientsStore() *OnlineClients {
 	return &OnlineClients{}
 }
 
+func (activeClients *OnlineClients) Size() int {
+	var count int
+	activeClients.clients.Range(func(key, value any) bool {
+		count++
+		return true
+	})
+
+	return count
+}
+
 func (activeClients *OnlineClients) StoreClient(sessionID string, client *Client) {
 	activeClients.clients.Store(sessionID, client)
 }

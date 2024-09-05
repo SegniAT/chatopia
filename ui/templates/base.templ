@@ -38,7 +38,12 @@ templ Navigation() {
 					<img class="h-8" src="/assets/logo.png"/>
 				</a>
 			</li>
-			<li><a class="hover:text-chatopia-1" href="/about">About</a></li>
+			<div class="flex gap-4">
+				<li>
+					@LiveUsers(0)
+				</li>
+				<li><a class="hover:text-chatopia-1" href="/about">About</a></li>
+			</div>
 		</ul>
 	</nav>
 }

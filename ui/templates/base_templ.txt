@@ -3,5 +3,6 @@
 </header><main>
 </main><footer class=\"mt-auto\">
 </footer></body></html>
-<nav class=\"text-xl\"><ul class=\"flex items-center justify-between gap-2 border-b border-b-chatopia-3 p-4\"><li><a href=\"/\"><img class=\"h-8\" src=\"/assets/logo.png\"></a></li><li><a class=\"hover:text-chatopia-1\" href=\"/about\">About</a></li></ul></nav>
+<nav class=\"text-xl\"><ul class=\"flex items-center justify-between gap-2 border-b border-b-chatopia-3 p-4\"><li><a href=\"/\"><img class=\"h-8\" src=\"/assets/logo.png\"></a></li><div class=\"flex gap-4\"><li>
+</li><li><a class=\"hover:text-chatopia-1\" href=\"/about\">About</a></li></div></ul></nav>
 <div class=\"pt-28\">.</div>

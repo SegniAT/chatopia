@@ -16,6 +16,8 @@ func (app *application) routes() http.Handler {
 	mux.Handle("POST /chat/{type}", app.session.Enable(http.HandlerFunc(app.chatPost)))
 	mux.Handle("GET /chat", dynamicMiddleware.ThenFunc(app.chat))
 
+	mux.HandleFunc("GET /live_users", app.liveUsers)
+
 	mux.Handle("GET /chat-ws", dynamicMiddleware.ThenFunc(func(w http.ResponseWriter, r *http.Request) {
 		app.ServeWs(w, r)
 	}))

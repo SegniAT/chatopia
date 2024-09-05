@@ -1,5 +1,7 @@
 package templates
 
+import "fmt"
+
 templ ConnectionStatusReady() {
 	<div id="connection_status" hx-swap-oob="true">
 		<p class="">Ready to connect</p>
@@ -75,5 +77,26 @@ templ ActionButton_Searching() {
 templ InterestPill(interest string) {
 	<div class="flex justify-center items-center px-2 h-6 bg-chatopia-2 border-l border-chatopia-3 shadow-sm shadow-chatopia-3 rounded-md">
 		{ interest }
+	</div>
+}
+
+templ LiveUsers(users int) {
+	<div
+		id="live_users"
+		class="relative flex items-center gap-1 text-2xl bg-chatopia-3 px-2 py-1 rounded-sm"
+		hx-get="/live_users"
+		hx-trigger="every 10s"
+		hx-swap-oob="true"
+	>
+		<!-- Dot positioned inside top-left of the div -->
+		<span class="absolute top-0 left-0 mt-1 ml-1 flex h-3 w-3">
+			<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+			<span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+		</span>
+		<!-- User count and "live" text -->
+		<div class="flex items-center gap-1 ml-3">
+			<span class="text-lg font-semibold">{ fmt.Sprintf("%d", users) }</span>
+		</div>
+		<span class="text-sm text-chatopia-1">live</span>
 	</div>
 }
