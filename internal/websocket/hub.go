@@ -89,7 +89,7 @@ func (h *Hub) cleanDisconnectedClients() {
 }
 
 func (h *Hub) checkClients() {
-	h.OnlineClients.clients.Range(func(key, value any) bool {
+	h.OnlineClients.Range(func(key, value any) bool {
 		client, ok := value.(*Client)
 		if !ok {
 			return true

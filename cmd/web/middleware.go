@@ -25,6 +25,7 @@ func (app *application) recoverPanic(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
 func (app *application) disableCacheInDevMode(next http.Handler) http.Handler {
 	if app.config.env != "development" {
 		return next

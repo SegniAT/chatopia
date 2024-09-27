@@ -6,7 +6,7 @@ import (
 )
 
 type OnlineClients struct {
-	clients sync.Map
+	sync.Map
 }
 
 func NewOnlineClientsStore() *OnlineClients {
@@ -15,7 +15,7 @@ func NewOnlineClientsStore() *OnlineClients {
 
 func (activeClients *OnlineClients) Size() int {
 	var count int
-	activeClients.clients.Range(func(key, value any) bool {
+	activeClients.Range(func(key, value any) bool {
 		count++
 		return true
 	})
@@ -24,11 +24,11 @@ func (activeClients *OnlineClients) Size() int {
 }
 
 func (activeClients *OnlineClients) StoreClient(sessionID string, client *Client) {
-	activeClients.clients.Store(sessionID, client)
+	activeClients.Store(sessionID, client)
 }
 
 func (activeClients *OnlineClients) GetClient(sessionID string) (*Client, bool) {
-	client, exists := activeClients.clients.Load(sessionID)
+	client, exists := activeClients.Load(sessionID)
 	if !exists {
 		return nil, false
 	}
@@ -37,7 +37,7 @@ func (activeClients *OnlineClients) GetClient(sessionID string) (*Client, bool) 
 }
 
 func (activeClients *OnlineClients) DeleteClient(sessionID string) {
-	activeClients.clients.Delete(sessionID)
+	activeClients.Delete(sessionID)
 }
 
 func (activeClients *OnlineClients) FindMatchingClient(
@@ -70,7 +70,7 @@ func (activeClients *OnlineClients) findMatchingClientInternal(sessionID string)
 	var bestMatch *Client
 	maxCommonInterests := -1
 
-	activeClients.clients.Range(func(_, value interface{}) bool {
+	activeClients.Range(func(_, value interface{}) bool {
 		client := value.(*Client)
 		if !client.IsActive() {
 			return true
@@ -111,7 +111,7 @@ func (activeClients *OnlineClients) findMatchingClientInternal(sessionID string)
 	}
 
 	var anyClient *Client
-	activeClients.clients.Range(func(_, value interface{}) bool {
+	activeClients.Range(func(_, value interface{}) bool {
 		client := value.(*Client)
 		if !client.IsActive() {
 			return true
