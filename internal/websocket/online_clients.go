@@ -144,10 +144,10 @@ func (activeClients *OnlineClients) findMatchingClientInternal(sessionID string)
 	return nil
 }
 
-func hasCommonInterests(interests1, interests2 []string) bool {
-	for interest1 := range interests1 {
-		for interest2 := range interests2 {
-			if interest1 == interest2 {
+func hasCommonInterests(ints1, ints2 []string) bool {
+	for _, int1 := range ints1 {
+		for _, int2 := range ints2 {
+			if int1 == int2 {
 				return true
 			}
 		}
@@ -155,11 +155,11 @@ func hasCommonInterests(interests1, interests2 []string) bool {
 	return false
 }
 
-func countCommonInterests(interests1, interests2 []string) int {
+func countCommonInterests(ints1, ints2 []string) int {
 	commonCount := 0
-	for interest1 := range interests1 {
-		for interest2 := range interests2 {
-			if interest1 == interest2 {
+	for _, int1 := range ints1 {
+		for _, int2 := range ints2 {
+			if int1 == int2 {
 				commonCount++
 			}
 		}
