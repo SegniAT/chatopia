@@ -17,13 +17,20 @@ var upgrader = gorillaWS.Upgrader{
 	WriteBufferSize: 1024,
 }
 
+func (app *application) ping(w http.ResponseWriter, _ *http.Request) {
+	_, err := w.Write([]byte("OK"))
+	if err != nil {
+		return
+	}
+}
+
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	component := templates.Home("Home", []string{})
 	component.Render(r.Context(), w)
 }
 
 func (app *application) about(w http.ResponseWriter, r *http.Request) {
-	component := templates.About("About Chatopia")
+	component := templates.About("About")
 	component.Render(r.Context(), w)
 }
 
@@ -33,17 +40,19 @@ func (app *application) liveUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) chatPost(w http.ResponseWriter, r *http.Request) {
-	interests, interestsErr := app.validateInterests(w, r)
-	r.ParseForm()
-
 	chatType := r.PathValue("type")
-	if chatType != "video" && chatType != "text" {
+	if !(chatType == "video" || chatType == "text") {
+		w.WriteHeader(http.StatusBadRequest)
 		component := templates.InterestInput([]string{}, fmt.Errorf("invalid chat type"))
 		component.Render(r.Context(), w)
 		return
 	}
 
+	interests, interestsErr := app.validateInterests(w, r)
+	r.ParseForm()
+
 	if interestsErr != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		component := templates.InterestInput(interests, interestsErr)
 		component.Render(r.Context(), w)
 		return

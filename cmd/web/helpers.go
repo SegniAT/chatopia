@@ -7,8 +7,6 @@ import (
 	"strings"
 )
 
-const SEPARATOR = "|"
-
 func (app *application) background(fn func()) {
 	app.wg.Add(1)
 	go func() {
@@ -57,7 +55,6 @@ func (app *application) validateInterests(w http.ResponseWriter, r *http.Request
 
 	for _, interest := range interestsRaw {
 		interest = strings.Trim(interest, " ")
-		interest = strings.ReplaceAll(interest, SEPARATOR, "_")
 
 		if interestLen := len(interest); interestLen == 0 {
 			if interestsErr == nil {
