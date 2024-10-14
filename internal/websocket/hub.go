@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	SEARCH_RETRIES    = 3
+	SEARCH_RETRIES    = 5
 	SEARCH_RETRY_WAIT = time.Second * 3
 	CLEANUP_PERIOD    = time.Second * 10
 )
@@ -26,26 +26,28 @@ type Hub struct {
 	Recieve       chan *Message
 	ctx           context.Context
 	wg            sync.WaitGroup
+	logger        *slog.Logger
 }
 
-func NewHub(ctx context.Context) *Hub {
+func NewHub(ctx context.Context, logger *slog.Logger) *Hub {
 	return &Hub{
 		OnlineClients: NewOnlineClientsStore(),
 		Recieve:       make(chan *Message),
 		Register:      make(chan *Client),
 		Unregister:    make(chan *Client),
 		ctx:           ctx,
+		logger:        logger,
 	}
 }
 
 func (h *Hub) Run() {
 	defer func() {
 		if r := recover(); r != nil {
-			slog.Error("panic in Hub.Run")
+			h.logger.ErrorContext(context.Background(), "panic in Hub.Run", slog.Any("error", r))
 		}
 	}()
 
-	slog.Info("Hub running")
+	h.logger.InfoContext(context.Background(), "Hub has started running")
 
 	go h.cleanDisconnectedClients()
 
@@ -104,17 +106,27 @@ func (h *Hub) checkClients() {
 }
 
 func (h *Hub) connectToClient(client *Client, HtmlTemplates *preloadedTemplates) {
+	h.logger.Debug("connectToClient called", slog.Any("client", client))
+
 	client.SendMessage(HtmlTemplates.ConnectionStatusSearching.Bytes())
 	client.SendMessage(HtmlTemplates.ActionBtnSearching.Bytes())
+
+	h.logger.Debug("finding matching client...")
+
 	partner := h.OnlineClients.FindMatchingClient(client.SessionID, SEARCH_RETRIES, SEARCH_RETRY_WAIT)
 
 	if partner == nil {
+		h.logger.Debug("matching client not found")
+
 		client.SendMessage(HtmlTemplates.ConnectionStatusNoClientsFound.Bytes())
 		client.SendMessage(HtmlTemplates.ActionBtnNew.Bytes())
 		return
 	} else {
+		h.logger.Debug("matching client found, attempting to connect")
 		err := client.Connect(partner)
 		if err != nil {
+			h.logger.Debug("PARTNER: ", slog.Any("partner", partner))
+			h.logger.Debug("matching client found, could not connect to found client")
 			client.SendMessage(HtmlTemplates.ConnectionStatusDisconnected.Bytes())
 			return
 		}
@@ -122,6 +134,7 @@ func (h *Hub) connectToClient(client *Client, HtmlTemplates *preloadedTemplates)
 		client.SendMessage(HtmlTemplates.ConnectionStatusConnected.Bytes())
 		partner.SendMessage(HtmlTemplates.ConnectionStatusConnected.Bytes())
 		client.SendMessage(HtmlTemplates.ActionBtnNew.Bytes())
+		partner.SendMessage(HtmlTemplates.ActionBtnNew.Bytes())
 
 		if client.ChatType == "video" {
 			callerPeerId := uuid.NewString()
@@ -146,6 +159,7 @@ func (h *Hub) connectToClient(client *Client, HtmlTemplates *preloadedTemplates)
 }
 
 func (h *Hub) handleRegistration(client *Client, HtmlTemplates *preloadedTemplates) {
+	h.logger.Debug("handleRegistration called", slog.Any("client", client))
 	defer h.wg.Done()
 
 	if client == nil {
@@ -156,6 +170,7 @@ func (h *Hub) handleRegistration(client *Client, HtmlTemplates *preloadedTemplat
 }
 
 func (h *Hub) handleUnregistration(client *Client, HtmlTemplates *preloadedTemplates) {
+	h.logger.Debug("handleUnregistration called", slog.Any("client", client))
 	defer h.wg.Done()
 
 	if client == nil {
@@ -189,6 +204,7 @@ func (h *Hub) handleMessage(message *Message, HtmlTemplates *preloadedTemplates)
 }
 
 func (h *Hub) handleChatMessage(message *Message) {
+	h.logger.Debug("handleChatMessage called", slog.Any("message", message))
 	client := message.From
 	if client == nil {
 		return
@@ -212,6 +228,7 @@ func (h *Hub) handleChatMessage(message *Message) {
 }
 
 func (h *Hub) handleTypingMessage(message *Message, HtmlTemplates *preloadedTemplates) {
+	h.logger.Debug("handleTypingMessage called", slog.Any("message", message))
 	client := message.From
 	if client == nil {
 		return
@@ -226,6 +243,7 @@ func (h *Hub) handleTypingMessage(message *Message, HtmlTemplates *preloadedTemp
 }
 
 func (h *Hub) handleNewCallMessage(message *Message, HtmlTemplates *preloadedTemplates) {
+	h.logger.Debug("handleNewCallMessage called", slog.Any("message", message))
 	client := message.From
 	if client == nil {
 		return
@@ -242,6 +260,7 @@ func (h *Hub) handleNewCallMessage(message *Message, HtmlTemplates *preloadedTem
 }
 
 func (h *Hub) handleEndCallMessage(message *Message, HtmlTemplates *preloadedTemplates) {
+	h.logger.Debug("handleEndCallMessage called", slog.Any("message", message))
 	client := message.From
 	if client == nil {
 		return

@@ -21,15 +21,23 @@ var (
 )
 
 type Client struct {
-	Hub       *Hub
-	send      chan []byte
-	Conn      *websocket.Conn
-	Searching bool
+	Hub       *Hub            `json:"-"`
+	send      chan []byte     `json:"-"`
+	Conn      *websocket.Conn `json:"-"`
+	Searching bool            `json:"-"`
 
-	SessionID   string
-	ChatPartner *Client
-	ChatType    string
-	Interests   []string
+	SessionID   string   `json:"session_id"`
+	ChatPartner *Client  `json:"-"`
+	ChatType    string   `json:"chat_type"`
+	Interests   []string `json:"interests"`
+}
+
+func (c Client) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.String("session_id", c.SessionID),
+		slog.String("chat_type", c.ChatType),
+		slog.Any("interests", c.Interests),
+	)
 }
 
 func NewClient(sessionID string, chatType string, interests []string, hub *Hub) *Client {
@@ -56,7 +64,7 @@ func (client *Client) ReadPump() {
 	defer func() {
 		client.Hub.Unregister <- client
 		if r := recover(); r != nil {
-			slog.Error("panic in Client.ReadPump", "err: ", r)
+			client.Hub.logger.Error("panic in Client.ReadPump", slog.Any("error", r))
 		}
 	}()
 
@@ -76,7 +84,7 @@ func (client *Client) ReadPump() {
 			err := client.Conn.ReadJSON(message)
 			if err != nil {
 				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					slog.Error("(readPump)", "error: ", err.Error())
+					client.Hub.logger.Error("ReadPump: can't read from connection ", slog.String("error", err.Error()))
 				}
 				break
 			}
@@ -94,14 +102,14 @@ func (client *Client) WritePump() {
 		client.Conn.Close()
 
 		if r := recover(); r != nil {
-			slog.Error("panic in Client.WritePump", "err: ", r)
+			client.Hub.logger.Error("panic in Client.WritePump", slog.Any("error", r))
 		}
 	}()
 
 	for {
 		select {
 		case <-client.Hub.ctx.Done():
-			slog.Info("closing WritePump (cancellation)")
+			client.Hub.logger.Info("closing WritePump (cancellation)")
 			return
 		case message, ok := <-client.send:
 			client.Conn.SetWriteDeadline(time.Now().Add(writeWait))

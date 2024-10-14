@@ -12,13 +12,14 @@ import (
 	"time"
 )
 
-func (app *application) serve() error {
+func (app *application) serve(h slog.Handler) error {
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", app.config.port),
 		Handler:      app.routes(),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
+		ErrorLog:     slog.NewLogLogger(h, slog.LevelError),
 	}
 
 	shutdownError := make(chan error)
@@ -29,7 +30,7 @@ func (app *application) serve() error {
 		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 		s := <-quit
 
-		slog.Info("shutting down server", "signal", s.String())
+		app.logger.InfoContext(context.Background(), "shutting down server", slog.String("signal", s.String()))
 
 		// cancel background tasks
 		app.cancel()
@@ -42,13 +43,13 @@ func (app *application) serve() error {
 			shutdownError <- err
 		}
 
-		slog.Info("completing background tasks", "addr", srv.Addr)
+		app.logger.InfoContext(context.Background(), "shutting down server", slog.String("signal", s.String()))
 
 		app.wg.Wait()
 		shutdownError <- nil
 	}()
 
-	slog.Info("starting server", "addr", srv.Addr, "env", app.config.env)
+	app.logger.InfoContext(context.Background(), "starting server", slog.String("addr", srv.Addr), slog.String("env", app.config.env))
 
 	err := srv.ListenAndServe()
 
@@ -63,7 +64,7 @@ func (app *application) serve() error {
 		return err
 	}
 
-	slog.Info("stopped server", "addr", srv.Addr)
+	app.logger.InfoContext(context.Background(), "stopped server", slog.String("addr", srv.Addr), slog.String("env", app.config.env))
 
 	return nil
 }

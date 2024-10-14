@@ -4,11 +4,29 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+
+	"github.com/SegniAdebaGodsSon/logger"
+	"github.com/google/uuid"
 )
+
+func (app *application) addRequestID(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := logger.AppendCtx(r.Context(), slog.String("req_id", uuid.NewString()))
+		r = r.WithContext(ctx)
+
+		next.ServeHTTP(w, r)
+	})
+}
 
 func (app *application) logRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		slog.Info("request", r.RemoteAddr, r.Proto, r.Method, r.URL.RequestURI())
+		app.logger.InfoContext(r.Context(),
+			"incoming request",
+			slog.String("method", r.Method),
+			slog.String("remote_addr", r.RemoteAddr),
+			slog.String("uri", r.URL.RequestURI()),
+			slog.String("proto", r.Proto),
+		)
 		next.ServeHTTP(w, r)
 	})
 }

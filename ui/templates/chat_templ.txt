@@ -1,9 +1,0 @@
-<script>\n\t</script>
-<div hx-ext=\"ws\" ws-connect=\"/chat-ws\"><div class=\"py-4 flex gap-2\">
-<div class=\"\">
-</div>
-<div class=\"flex flex-col h-full flex-grow\"><div id=\"connection_status\"><p>Connecting...</p></div><div id=\"interests_chat\" class=\"flex gap-1 my-1\">
-<span class=\"text-chatopia-4\">Interests: </span> 
-</div>
-</div></div><div>
-</div></div>

@@ -55,7 +55,10 @@ func (app *application) chatPost(w http.ResponseWriter, r *http.Request) {
 
 	app.hub.OnlineClients.StoreClient(client.SessionID, client)
 
-	slog.Info("client registered", "sessionID:", client.SessionID, "interests:", client.Interests)
+	app.logger.InfoContext(r.Context(),
+		"client registered",
+		slog.Any("client", client),
+	)
 
 	app.session.Put(r, "clientSessionId", clientSessionId)
 
@@ -81,7 +84,7 @@ func (app *application) chat(w http.ResponseWriter, r *http.Request) {
 func (app *application) ServeWs(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		slog.Error("(serveWs)", "error", err.Error())
+		app.logger.Error("serveWs error", slog.String("error", err.Error()))
 	}
 
 	sessionId := app.session.GetString(r, "clientSessionId")
