@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"log"
 	"log/slog"
 	"os"
 	"sync"
@@ -42,17 +43,10 @@ func main() {
 
 	flag.Parse()
 
-	loggerOpts := internalLogger.PrettyHandlerOptions{
-		SlogOpts: slog.HandlerOptions{
-			AddSource: true,
-			Level:     slog.LevelDebug,
-		},
+	logger, logHandler, err := setupLogger(&cfg)
+	if err != nil {
+		log.Fatalf("error setting up logging %v", err)
 	}
-
-	logHandler := internalLogger.ContextHandler{
-		Handler: internalLogger.NewPrettyHandler(os.Stdout, loggerOpts),
-	}
-	logger := slog.New(logHandler)
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -72,9 +66,37 @@ func main() {
 	app.logger.InfoContext(ctx, "Starting Hub")
 	go app.hub.Run()
 
-	err := app.serve(logHandler)
+	err = app.serve(logHandler)
 
 	if err != nil {
 		slog.Error(err.Error())
 	}
+}
+
+func setupLogger(cfg *config) (*slog.Logger, slog.Handler, error) {
+	loggerOpts := internalLogger.PrettyHandlerOptions{
+		SlogOpts: slog.HandlerOptions{
+			AddSource: true,
+			Level:     slog.LevelDebug,
+		},
+	}
+
+	var logHandler slog.Handler
+
+	switch cfg.env {
+	case "production":
+		file, err := os.OpenFile("./app.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+		if err != nil {
+			log.Fatalf("Failed to open log file %v", err)
+		}
+
+		logHandler = internalLogger.ContextHandler{
+			Handler: slog.NewJSONHandler(file, &loggerOpts.SlogOpts),
+		}
+	default:
+		logHandler = internalLogger.ContextHandler{
+			Handler: internalLogger.NewPrettyHandler(os.Stdout, loggerOpts),
+		}
+	}
+	return slog.New(logHandler), logHandler, nil
 }

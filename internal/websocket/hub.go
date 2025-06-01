@@ -21,8 +21,8 @@ const (
 
 type Hub struct {
 	OnlineClients *OnlineClients
-	Register      chan *Client
-	Unregister    chan *Client
+	register      chan *Client
+	unregister    chan *Client
 	Recieve       chan *Message
 	ctx           context.Context
 	wg            sync.WaitGroup
@@ -31,14 +31,41 @@ type Hub struct {
 
 func NewHub(ctx context.Context, logger *slog.Logger) *Hub {
 	return &Hub{
-		OnlineClients: NewOnlineClientsStore(),
+		OnlineClients: NewOnlineClientsStore(logger),
 		Recieve:       make(chan *Message),
-		Register:      make(chan *Client),
-		Unregister:    make(chan *Client),
+		register:      make(chan *Client),
+		unregister:    make(chan *Client),
 		ctx:           ctx,
 		logger:        logger,
 	}
 }
+
+func (h *Hub) RegisterClient(client *Client) error {
+	if client == nil {
+		return fmt.Errorf("can't register nil 'Client'")
+	}
+	h.register <- client
+	return nil
+}
+
+func (h *Hub) UnregisterClient(client *Client) error {
+	if client == nil {
+		return fmt.Errorf("can't unregister nil 'Client'")
+	}
+	h.unregister <- client
+	return nil
+}
+
+/*
+func (h *Hub) RunMatchmaker(HtmlTemplates *preloadedTemplates) {
+	for {
+		select {
+		case client := <-h.queue:
+			h.connectToClient(client, HtmlTemplates)
+		}
+	}
+}
+*/
 
 func (h *Hub) Run() {
 	defer func() {
@@ -59,11 +86,11 @@ func (h *Hub) Run() {
 			h.wg.Wait()
 			return
 
-		case client := <-h.Register:
+		case client := <-h.register:
 			h.wg.Add(1)
 			go h.handleRegistration(client, HtmlTemplates)
 
-		case client := <-h.Unregister:
+		case client := <-h.unregister:
 			h.wg.Add(1)
 			go h.handleUnregistration(client, HtmlTemplates)
 
@@ -115,6 +142,11 @@ func (h *Hub) connectToClient(client *Client, HtmlTemplates *preloadedTemplates)
 
 	partner := h.OnlineClients.FindMatchingClient(client.SessionID, SEARCH_RETRIES, SEARCH_RETRY_WAIT)
 
+	if client.ChatPartner != nil {
+		h.logger.Debug("matching client already found")
+		return
+	}
+
 	if partner == nil {
 		h.logger.Debug("matching client not found")
 
@@ -126,7 +158,7 @@ func (h *Hub) connectToClient(client *Client, HtmlTemplates *preloadedTemplates)
 		err := client.Connect(partner)
 		if err != nil {
 			h.logger.Debug("PARTNER: ", slog.Any("partner", partner))
-			h.logger.Debug("matching client found, could not connect to found client")
+			h.logger.Debug("matching client found, could not connect to found client", slog.String("error", err.Error()))
 			client.SendMessage(HtmlTemplates.ConnectionStatusDisconnected.Bytes())
 			return
 		}
@@ -177,9 +209,8 @@ func (h *Hub) handleUnregistration(client *Client, HtmlTemplates *preloadedTempl
 		return
 	}
 
-	client.SendMessage(HtmlTemplates.ConnectionStatusDisconnected.Bytes())
-
 	partner := client.Disconnect()
+	client.SendMessage(HtmlTemplates.ConnectionStatusDisconnected.Bytes())
 
 	if partner != nil {
 		partner.Disconnect()
@@ -266,10 +297,9 @@ func (h *Hub) handleEndCallMessage(message *Message, HtmlTemplates *preloadedTem
 		return
 	}
 
-	// Disconnect
+	partner := client.Disconnect()
 	client.SendMessage(HtmlTemplates.ConnectionStatusDisconnected.Bytes())
 
-	partner := client.Disconnect()
 	if partner != nil {
 		partner.SendMessage(HtmlTemplates.ConnectionStatusDisconnected.Bytes())
 	}

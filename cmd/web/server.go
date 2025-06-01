@@ -33,6 +33,7 @@ func (app *application) serve(h slog.Handler) error {
 		app.logger.InfoContext(context.Background(), "shutting down server", slog.String("signal", s.String()))
 
 		// cancel background tasks
+		// TODO: this might be bad, srv.Shutdown() already waits for active connections without interrupting
 		app.cancel()
 
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

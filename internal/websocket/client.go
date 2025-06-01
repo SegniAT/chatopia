@@ -29,6 +29,7 @@ type Client struct {
 	SessionID   string   `json:"session_id"`
 	ChatPartner *Client  `json:"-"`
 	ChatType    string   `json:"chat_type"`
+	IsStrict    bool     `json:"is_strict"`
 	Interests   []string `json:"interests"`
 }
 
@@ -40,11 +41,12 @@ func (c Client) LogValue() slog.Value {
 	)
 }
 
-func NewClient(sessionID string, chatType string, interests []string, hub *Hub) *Client {
+func NewClient(sessionID string, chatType string, isStrict bool, interests []string, hub *Hub) *Client {
 	return &Client{
 		Hub:       hub,
 		SessionID: sessionID,
 		ChatType:  chatType,
+		IsStrict:  isStrict,
 		Interests: interests,
 		send:      make(chan []byte, 256),
 	}
@@ -62,7 +64,10 @@ func (client *Client) IsActive() bool {
 
 func (client *Client) ReadPump() {
 	defer func() {
-		client.Hub.Unregister <- client
+		err := client.Hub.UnregisterClient(client)
+		if err != nil {
+			client.Hub.logger.Error("error in ReadPump, UnregisterClient", slog.String("error", err.Error()))
+		}
 		if r := recover(); r != nil {
 			client.Hub.logger.Error("panic in Client.ReadPump", slog.Any("error", r))
 		}
@@ -151,10 +156,15 @@ func (client *Client) Connect(partner *Client) error {
 		return fmt.Errorf("(client.Connect) Client cannot connect with itself")
 	}
 
-	client.Disconnect()
-	client.ChatPartner = partner
+	if client.ChatPartner != nil {
+		return fmt.Errorf("(client.Connect) Client already connected to a partner")
+	}
 
-	partner.Disconnect()
+	if partner.ChatPartner != nil {
+		return fmt.Errorf("(client.Connect) Partner already connected to another client")
+	}
+
+	client.ChatPartner = partner
 	partner.ChatPartner = client
 	return nil
 }

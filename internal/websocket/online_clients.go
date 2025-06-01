@@ -1,16 +1,20 @@
 package websocket
 
 import (
+	"log/slog"
 	"sync"
 	"time"
 )
 
 type OnlineClients struct {
+	logger *slog.Logger
 	sync.Map
 }
 
-func NewOnlineClientsStore() *OnlineClients {
-	return &OnlineClients{}
+func NewOnlineClientsStore(logger *slog.Logger) *OnlineClients {
+	return &OnlineClients{
+		logger: logger,
+	}
 }
 
 func (activeClients *OnlineClients) Size() int {
@@ -45,8 +49,18 @@ func (activeClients *OnlineClients) FindMatchingClient(
 	retries int,
 	waitDuration time.Duration,
 ) *Client {
+	currentClient, exists := activeClients.GetClient(sessionID)
+	if !exists {
+		return nil
+	}
+
+	currentClient.Searching = true
+	defer func() {
+		currentClient.Searching = false
+	}()
+
 	for range retries {
-		partner := activeClients.findMatchingClientInternal(sessionID)
+		partner := activeClients.findMatchingClientInternal(currentClient)
 		if partner != nil {
 			return partner
 		}
@@ -57,16 +71,7 @@ func (activeClients *OnlineClients) FindMatchingClient(
 	return nil
 }
 
-func (activeClients *OnlineClients) findMatchingClientInternal(sessionID string) *Client {
-	currentClient, exists := activeClients.GetClient(sessionID)
-	if !exists {
-		return nil
-	}
-	currentClient.Searching = true
-	defer func() {
-		currentClient.Searching = false
-	}()
-
+func (activeClients *OnlineClients) findMatchingClientInternal(currentClient *Client) *Client {
 	var bestMatch *Client
 	maxCommonInterests := -1
 
@@ -88,11 +93,16 @@ func (activeClients *OnlineClients) findMatchingClientInternal(sessionID string)
 			return true
 		}
 
-		if client.Searching {
+		if !client.Searching {
 			return true
 		}
 
 		commonInterests := countCommonInterests(client.Interests, currentClient.Interests)
+		if len(currentClient.Interests) == 0 {
+			bestMatch = client
+			return false
+		}
+
 		if commonInterests > maxCommonInterests {
 			bestMatch = client
 			maxCommonInterests = commonInterests
@@ -105,43 +115,21 @@ func (activeClients *OnlineClients) findMatchingClientInternal(sessionID string)
 		return true
 	})
 
-	// check if both clients are still available
-	if bestMatch != nil && currentClient.ChatPartner == nil && bestMatch.ChatPartner == nil {
+	if bestMatch == nil {
 		return bestMatch
 	}
 
-	var anyClient *Client
-	activeClients.Range(func(_, value interface{}) bool {
-		client := value.(*Client)
-		if !client.IsActive() {
-			return true
-		}
-
-		if client.SessionID == currentClient.SessionID {
-			return true
-		}
-
-		if client.ChatType != currentClient.ChatType {
-			return true
-		}
-
-		if client.ChatPartner != nil || currentClient.ChatPartner != nil {
-			return true
-		}
-
-		if client.Searching {
-			return true
-		}
-
-		anyClient = client
-		return false
-	})
-
-	if anyClient != nil && currentClient.ChatPartner == nil && anyClient.ChatPartner == nil {
-		return anyClient
+	// if a client sets isStrict=true and has no interests, only match with people with no interests
+	if (currentClient.IsStrict && len(currentClient.Interests) == 0) && (len(bestMatch.Interests) != 0) {
+		return nil
 	}
 
-	return nil
+	if currentClient.IsStrict && maxCommonInterests == 0 ||
+		bestMatch.IsStrict && maxCommonInterests == 0 {
+		return nil
+	}
+
+	return bestMatch
 }
 
 func hasCommonInterests(ints1, ints2 []string) bool {

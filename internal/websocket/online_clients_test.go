@@ -1,9 +1,27 @@
 package websocket
 
-import "testing"
+import (
+	"log/slog"
+	"os"
+	"testing"
+
+	internalLogger "github.com/SegniAdebaGodsSon/logger"
+)
+
+var loggerOpts = internalLogger.PrettyHandlerOptions{
+	SlogOpts: slog.HandlerOptions{
+		AddSource: true,
+		Level:     slog.LevelDebug,
+	},
+}
+
+var logHandler = internalLogger.ContextHandler{
+	Handler: internalLogger.NewPrettyHandler(os.Stdout, loggerOpts),
+}
+var logger = slog.New(logHandler)
 
 func TestNewOnlineClientsStoreCreation(t *testing.T) {
-	oc := NewOnlineClientsStore()
+	oc := NewOnlineClientsStore(logger)
 	if oc == nil {
 		t.Error("want OnlineClients{}, got nil")
 	}
@@ -15,8 +33,8 @@ func TestNewOnlineClientsStoreCreation(t *testing.T) {
 
 func TestStoreClient(t *testing.T) {
 	sessionId := "123"
-	oc := NewOnlineClientsStore()
-	cl := NewClient(sessionId, "text", []string{}, nil)
+	oc := NewOnlineClientsStore(logger)
+	cl := NewClient(sessionId, "text", false, []string{}, nil)
 	oc.StoreClient(sessionId, cl)
 
 	if size := oc.Size(); size != 1 {
@@ -35,8 +53,8 @@ func TestStoreClient(t *testing.T) {
 
 func TestGetClient(t *testing.T) {
 	sesh1, sesh2 := "1", "2"
-	oc := NewOnlineClientsStore()
-	cl := NewClient(sesh1, "text", []string{}, nil)
+	oc := NewOnlineClientsStore(logger)
+	cl := NewClient(sesh1, "text", false, []string{}, nil)
 	oc.StoreClient(sesh1, cl)
 
 	v, ok := oc.GetClient(sesh1)
@@ -60,8 +78,8 @@ func TestGetClient(t *testing.T) {
 
 func TestDeleteClient(t *testing.T) {
 	sesh1 := "1"
-	oc := NewOnlineClientsStore()
-	cl := NewClient(sesh1, "text", []string{}, nil)
+	oc := NewOnlineClientsStore(logger)
+	cl := NewClient(sesh1, "text", false, []string{}, nil)
 	oc.StoreClient(sesh1, cl)
 
 	oc.DeleteClient(sesh1)

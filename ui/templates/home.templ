@@ -1,6 +1,6 @@
 package templates
 
-templ Home(title string, interests []string) {
+templ Home(title string, isStrict bool, interests []string) {
 	<script>
 		let showError=(error)=>{
 			const errInterests = document.querySelector("#interests_error")
@@ -118,6 +118,11 @@ templ Home(title string, interests []string) {
 			return interests
 		}
 
+		let getStrictValue = () => {
+			const strict_checkbox = document.querySelector("#strict_checkbox")
+			return strict_checkbox.checked
+		}
+
 		let updateInterestsLocalStorage=()=>{
 			let interests = getInterestsFromPills()
 			localStorage.setItem("interests", JSON.stringify(interests))
@@ -182,7 +187,8 @@ templ Home(title string, interests []string) {
 					hx-post="/chat/video"
 					hx-target="#interest_form"
 					hx-vals='js:{
-						"interests[]": getInterestsFromPills()
+						"interests[]": getInterestsFromPills(),
+						"isStrict": getStrictValue()
 					}'
 				>
 					<button class="rounded-md border-2 border-chatopia-1 bg-chatopia-2 text-chatopia-1 py-1 px-4 font-semibold" type="submit">Video</button>
@@ -192,11 +198,20 @@ templ Home(title string, interests []string) {
 					hx-post="/chat/text"
 					hx-target="#interest_form"
 					hx-vals='js:{
-						"interests[]": getInterestsFromPills()
+						"interests[]": getInterestsFromPills(),
+						"isStrict": getStrictValue()
 					}'
 				>
 					<button class="rounded-md border-2 border-chatopia-3 bg-chatopia-3 text-chatopia-5 py-1 px-5 font-semibold" type="submit">Text</button>
 				</form>
+			</div>
+			<div class="py-2 flex items-center gap-1">
+				if isStrict {
+					<input id="strict_checkbox" name="strict" type="checkbox" checked/>
+				} else {
+					<input id="strict_checkbox" name="strict" type="checkbox"/>
+				}
+				<label for="strict">strict <span class="text-chatopia-4">(atleast 1 common interest)</span></label>
 			</div>
 			<div id="interest_form">
 				@InterestInput(interests, nil)
@@ -206,7 +221,7 @@ templ Home(title string, interests []string) {
 }
 
 templ InterestInput(interests []string, interestsError error) {
-	<p>Interests (optional):</p>
+	<p>Interests <span class="text-chatopia-4">(optional)</span>:</p>
 	<div class="flex flex-col items-start">
 		<div id="interest_pills" class="flex gap-2 py-2">
 			for _, interest := range interests {

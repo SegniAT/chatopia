@@ -25,7 +25,15 @@ func (app *application) ping(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	component := templates.Home("Home", []string{})
+	var isStrict bool
+	var interests []string
+	sessionId := app.session.GetString(r, "clientSessionId")
+	client, ok := app.hub.OnlineClients.GetClient(sessionId)
+	if ok {
+		isStrict = client.IsStrict
+		interests = client.Interests
+	}
+	component := templates.Home("Home", isStrict, interests)
 	component.Render(r.Context(), w)
 }
 
@@ -48,7 +56,7 @@ func (app *application) chatPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	interests, interestsErr := app.validateInterests(w, r)
+	isStrict, interests, interestsErr := app.validateInterests(w, r)
 	r.ParseForm()
 
 	if interestsErr != nil {
@@ -60,12 +68,12 @@ func (app *application) chatPost(w http.ResponseWriter, r *http.Request) {
 
 	clientSessionId := uuid.NewString()
 
-	client := internalWS.NewClient(clientSessionId, chatType, interests, app.hub)
+	client := internalWS.NewClient(clientSessionId, chatType, isStrict, interests, app.hub)
 
 	app.hub.OnlineClients.StoreClient(client.SessionID, client)
 
 	app.logger.InfoContext(r.Context(),
-		"client registered",
+		"client registered to store",
 		slog.Any("client", client),
 	)
 
@@ -78,8 +86,8 @@ func (app *application) chatPost(w http.ResponseWriter, r *http.Request) {
 func (app *application) chat(w http.ResponseWriter, r *http.Request) {
 	sessionId := app.session.GetString(r, "clientSessionId")
 
-	client, bool := app.hub.OnlineClients.GetClient(sessionId)
-	if !bool {
+	client, ok := app.hub.OnlineClients.GetClient(sessionId)
+	if !ok {
 		w.Header().Set("HX-Redirect", "/")
 		w.WriteHeader(http.StatusSeeOther)
 		return
@@ -93,13 +101,15 @@ func (app *application) chat(w http.ResponseWriter, r *http.Request) {
 func (app *application) ServeWs(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		app.logger.Error("serveWs error", slog.String("error", err.Error()))
+		app.logger.ErrorContext(r.Context(), "serveWs error", slog.String("error", err.Error()))
+		w.Header().Set("HX-Redirect", "/")
+		w.WriteHeader(http.StatusSeeOther)
 	}
 
 	sessionId := app.session.GetString(r, "clientSessionId")
 
-	client, bool := app.hub.OnlineClients.GetClient(sessionId)
-	if !bool {
+	client, ok := app.hub.OnlineClients.GetClient(sessionId)
+	if !ok {
 		w.Header().Set("HX-Redirect", "/")
 		w.WriteHeader(http.StatusSeeOther)
 		return
@@ -107,7 +117,16 @@ func (app *application) ServeWs(w http.ResponseWriter, r *http.Request) {
 
 	client.Conn = conn
 
-	app.hub.Register <- client
+	err = app.hub.RegisterClient(client)
+	if err != nil {
+		w.Header().Set("HX-Redirect", "/")
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+	app.logger.InfoContext(r.Context(),
+		"client registered to HUB",
+		slog.Any("client", client),
+	)
 
 	go client.WritePump()
 	go client.ReadPump()
