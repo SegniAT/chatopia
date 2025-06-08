@@ -2,10 +2,13 @@ package websocket
 
 import (
 	"log/slog"
+	"slices"
 	"sync"
 	"time"
 )
 
+// TODO: there's still race condition using sync.Map...it's only atomic when reading and writing...but when matchmaking we need to make the whole process atomic
+// just use normal map with sync.Mutex
 type OnlineClients struct {
 	logger *slog.Logger
 	sync.Map
@@ -75,7 +78,7 @@ func (activeClients *OnlineClients) findMatchingClientInternal(currentClient *Cl
 	var bestMatch *Client
 	maxCommonInterests := -1
 
-	activeClients.Range(func(_, value interface{}) bool {
+	activeClients.Range(func(_, value any) bool {
 		client := value.(*Client)
 		if !client.IsActive() {
 			return true
@@ -134,10 +137,8 @@ func (activeClients *OnlineClients) findMatchingClientInternal(currentClient *Cl
 
 func hasCommonInterests(ints1, ints2 []string) bool {
 	for _, int1 := range ints1 {
-		for _, int2 := range ints2 {
-			if int1 == int2 {
-				return true
-			}
+		if slices.Contains(ints2, int1) {
+			return true
 		}
 	}
 	return false

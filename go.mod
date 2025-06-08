@@ -1,9 +1,11 @@
 module github.com/SegniAdebaGodsSon
 
-go 1.22.4
+go 1.23.0
+
+toolchain go1.23.2
 
 require (
-	github.com/a-h/templ v0.2.747
+	github.com/a-h/templ v0.3.894
 	github.com/golangcollege/sessions v1.2.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
@@ -15,5 +17,5 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	golang.org/x/crypto v0.0.0-20200317142112-1b76d66859c6 // indirect
-	golang.org/x/sys v0.21.0 // indirect
+	golang.org/x/sys v0.32.0 // indirect
 )

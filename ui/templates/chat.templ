@@ -1,36 +1,171 @@
 package templates
 
+import "github.com/google/uuid"
+
 templ Chat(title string, video bool, interests []string) {
-	<script>
-	</script>
 	@Base(title) {
 		<div hx-ext="ws" ws-connect="/chat-ws">
-			<div class="py-4 flex gap-2">
-				if video {
-					<div class="">
-						@VideoChat()
-					</div>
-				}
-				<div class="flex flex-col h-full flex-grow">
-					<div id="connection_status">
-						<p>
-							Connecting...
-						</p>
-					</div>
-					<div id="interests_chat" class="flex gap-1 my-1">
-						if len(interests) > 0 {
-							<span class="text-chatopia-4">Interests: </span>
-							for _, interest:=range interests {
-								@InterestPill(interest)
-							}
-						}
-					</div>
-					@TextChat()
-				</div>
-			</div>
+			@ChatInner(uuid.Nil, uuid.Nil, true, video, interests)
 			<div>
 				@ActionButton_NewChat()
 			</div>
 		</div>
 	}
+}
+
+templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video bool, interests []string) {
+	<div id="chat_inner" hx-swap-oob="outerHTML">
+		<script>
+			// TODO: maybe handle 
+			// Peer:           'close', 'disconnected' and 'error' events AND
+			// DataConnection: 'close' and 'error' events gracefully
+			if (window.peer) {
+				console.log("Destroying previous Peer object.");
+				window.peer.destroy();
+			}
+
+			// Use a single, persistent peer object. 'var' prevents re-declaration errors from HTMX swaps.
+			if ({{ peerID }} !== {{ uuid.Nil }}) {
+				console.log("Creating new Peer object with ID:", "{{ peerID }}");
+				window.peer = new Peer({{ peerID }}, {
+					host: "/",
+					port: 9000,
+					debug: 1,
+					config: {
+						'iceServers': [
+							{ urls: "stun:stun.l.google.com:19302" },
+							{ urls: "turn:turn.bistri.com:80", username: "homeo", credential: "homeo" }
+						]
+					}
+				});
+
+				window.peer.on('error', err => {
+					console.error('PeerJS error:', err.type, err);
+				});
+
+				window.peer.on('open', id => {
+					console.log('My peer ID is now registered with the server:', id);
+
+					// We only try to connect if we have a strangerPeerID and a valid peer object.
+					if ({{ strangerPeerID }} !== {{ uuid.Nil }}) {
+						const isCaller = {{ isCaller }};
+						var conn = null;
+			
+						if (isCaller) {
+							console.debug("Acting as CALLER. Connecting to:", "{{ strangerPeerID }}");
+
+							conn = window.peer.connect({{ strangerPeerID }});
+
+							conn.on('error', err => console.error('Connection error (caller):', err));
+							
+							// The 'open' event signals a successful connection for the caller.
+							conn.on('open', () => {
+								console.log("Successfull call: ", conn)
+								setupChat(conn);
+							});
+
+						} else {
+							console.log("Acting as RECEIVER. Waiting for connection...");
+
+							window.peer.on('connection', (connection) => {
+								console.log("Incoming connection received.", connection);
+								conn = connection;
+								conn.on('error', err => console.error('Connection error (receiver):', err));
+								setupChat(conn);
+							});
+						}
+					}
+				})
+			}
+
+			
+
+			// This function sets up all event handlers for an active connection.
+			// It's called by both the caller and the receiver once the connection is established.
+			function setupChat(connection) {
+				console.log('PeerJS DataConnection is open. Setting up chat handlers.');
+				const chatBubbles = document.querySelector("#chat_bubbles");
+				
+				// Handle incoming data (messages from stranger)
+				connection.on('data', data => {
+					newChatBubble(data, false);
+				});
+
+				const chatForm = document.querySelector("#chat_form");
+				const textarea = chatForm.querySelector("#chat_message");
+				const sendChatButton = document.querySelector("#send_chat_button");
+
+				// CRITICAL: To prevent multiple listeners on reconnect, clone the button to remove old listeners.
+				const newButton = sendChatButton.cloneNode(true);
+				sendChatButton.parentNode.replaceChild(newButton, sendChatButton);
+
+
+				// Handle outgoing data (sending a message)
+				newButton.addEventListener("click", (e) => {
+					const message = textarea.value.trim();
+
+					if (message) {
+						newChatBubble(message, true);
+						connection.send(message);
+						textarea.value = "";
+					}
+				});
+
+				textarea.addEventListener('keydown', e => {
+					if(e.key == 'Enter' && !e.shiftkey){
+						e.preventDefault();
+						newButton.click();
+					}
+				});
+				
+			}
+
+			function newChatBubble(message, isMe) {
+				const wrapper = document.createElement("div");
+				wrapper.classList.add("flex", "gap-1", "w-full", isMe ? "justify-end" : "justify-start");
+
+				const innerWrapper = document.createElement("div");
+				if (isMe) {
+					innerWrapper.classList.add("flex", "gap-2", "p-2", "rounded-lg", "max-w-xs", "bg-blue-500", "text-white");
+				} else {
+					innerWrapper.classList.add("flex", "gap-2", "p-2", "rounded-lg", "max-w-xs", "bg-gray-200", "text-gray-800");
+				}
+
+				// const who = document.createElement("p");
+				// who.textContent = isMe ? "You:" : "Stranger:";
+				// who.classList.add("font-bold");
+
+				const msg = document.createElement("p");
+				msg.textContent = message;
+
+				innerWrapper.append(msg);
+				wrapper.appendChild(innerWrapper);
+
+				const chatBubbles = document.querySelector("#chat_bubbles");
+				chatBubbles.appendChild(wrapper);
+				wrapper.scrollIntoView({ block: "end", behavior: "smooth" });
+			}	
+		</script>
+		<div id="chat_inner_content" class="py-4 flex gap-2">
+			if video {
+				<div class="">
+					@VideoChat()
+				</div>
+			}
+			<div class="flex flex-col h-full flex-grow">
+				<div id="connection_status">
+					<p>Connecting...</p>
+				</div>
+				<div id="interests_chat" class="flex gap-1 my-1">
+					if len(interests) > 0 {
+						<span class="text-chatopia-4">Interests: </span>
+						for _, interest := range interests {
+							@InterestPill(interest)
+						}
+					}
+				</div>
+				@TextChat()
+			</div>
+		</div>
+	</div>
 }

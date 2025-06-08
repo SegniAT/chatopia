@@ -4,3 +4,5 @@ tmp
 bin
 coverage.cov
 *.log
+ui/templates/*.go
+masterplan.excalidraw

@@ -1,34 +1,13 @@
 package templates
 
 templ TextChat() {
-	<script>
-		document.addEventListener("DOMContentLoaded",(e)=> {
-			let chatForm = document.querySelector("#chat_form")
-			
-			if(chatForm) {
-				chatForm.addEventListener('htmx:wsAfterSend', function(e) {
-					let chatMessage = chatForm.querySelector("#chat_message")
-					try {
-						let messageData = JSON.parse(e.detail.message)
-						if(messageData.message_type != "typing" && chatMessage){
-							chatMessage.value = ""
-						}
-					} catch(err) {
-						console.error("Error parsing ws message JSON:", err)
-					}
-					
-				});
-			}
-			
-		})
-	</script>
 	<div>
-		<div class="flex-grow p-2 my-2 shadow-sm shadow-chatopia-1 rounded-md min-h-20">
+		<div class="flex-grow p-2 my-2 shadow-sm shadow-chatopia-1 rounded-md">
 			<div id="chat_bubbles" class="flex flex-col gap-1 pb-1"></div>
 			<div id="chat_typing"></div>
 		</div>
 		<div>
-			<form id="chat_form" class="flex items-end gap-2" ws-send hx-trigger="submit" hx-vals='{"message_type":"chat_message"}'>
+			<form id="chat_form" class="flex items-end gap-2">
 				<textarea
 					id="chat_message"
 					name="chat_message"
@@ -38,7 +17,7 @@ templ TextChat() {
 					hx-vals='{"message_type":"typing"}'
 					hx-trigger="keyup changed throttle:3s"
 				></textarea>
-				<button id="send_chat_button" type="submit" class="px-2 bg-chatopia-1 text-chatopia-2 rounded-md">Send</button>
+				<button id="send_chat_button" type="button" class="px-2 bg-chatopia-1 text-chatopia-2 rounded-md">Send</button>
 			</form>
 		</div>
 	</div>

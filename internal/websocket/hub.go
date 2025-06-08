@@ -153,41 +153,45 @@ func (h *Hub) connectToClient(client *Client, HtmlTemplates *preloadedTemplates)
 		client.SendMessage(HtmlTemplates.ConnectionStatusNoClientsFound.Bytes())
 		client.SendMessage(HtmlTemplates.ActionBtnNew.Bytes())
 		return
-	} else {
-		h.logger.Debug("matching client found, attempting to connect")
-		err := client.Connect(partner)
-		if err != nil {
-			h.logger.Debug("PARTNER: ", slog.Any("partner", partner))
-			h.logger.Debug("matching client found, could not connect to found client", slog.String("error", err.Error()))
-			client.SendMessage(HtmlTemplates.ConnectionStatusDisconnected.Bytes())
-			return
-		}
-
-		client.SendMessage(HtmlTemplates.ConnectionStatusConnected.Bytes())
-		partner.SendMessage(HtmlTemplates.ConnectionStatusConnected.Bytes())
-		client.SendMessage(HtmlTemplates.ActionBtnNew.Bytes())
-		partner.SendMessage(HtmlTemplates.ActionBtnNew.Bytes())
-
-		if client.ChatType == "video" {
-			callerPeerId := uuid.NewString()
-			partnerPeerId := uuid.NewString()
-
-			callerMessage := Message{
-				Type:        "PEER_ID_PARTNER",
-				ChatMessage: fmt.Sprintf("{\"id\":\"%s\", \"partner_id\":\"%s\"}", callerPeerId, partnerPeerId),
-			}
-			callerMessageHtml, _ := callerMessage.Encode()
-
-			partnerMessage := Message{
-				Type:        "PEER_ID_CALLER",
-				ChatMessage: fmt.Sprintf("{\"id\":\"%s\", \"caller_id\":\"%s\"}", partnerPeerId, callerPeerId),
-			}
-			partnerMessageHtml, _ := partnerMessage.Encode()
-
-			client.SendMessage(callerMessageHtml)
-			partner.SendMessage(partnerMessageHtml)
-		}
 	}
+
+	h.logger.Debug("matching client found, attempting to connect")
+	err := client.Connect(partner)
+	if err != nil {
+		h.logger.Debug("PARTNER: ", slog.Any("partner", partner))
+		h.logger.Debug("matching client found, could not connect to found client", slog.String("error", err.Error()))
+		client.SendMessage(HtmlTemplates.ConnectionStatusDisconnected.Bytes())
+		return
+	}
+
+	chatInnerClientBytesBuffer := bytes.NewBuffer(nil)
+	chatInnerStrangerBytesBuffer := bytes.NewBuffer(nil)
+	var peerID = uuid.New()
+	var strangerPeerID = uuid.New()
+
+	templates.ChatInner(
+		peerID,
+		strangerPeerID,
+		true,
+		client.ChatType == "video",
+		client.Interests,
+	).Render(h.ctx, chatInnerClientBytesBuffer)
+
+	templates.ChatInner(
+		strangerPeerID,
+		peerID,
+		false,
+		partner.ChatType == "video",
+		partner.Interests,
+	).Render(h.ctx, chatInnerStrangerBytesBuffer)
+
+	client.SendMessage(chatInnerClientBytesBuffer.Bytes())
+	partner.SendMessage(chatInnerStrangerBytesBuffer.Bytes())
+
+	client.SendMessage(HtmlTemplates.ConnectionStatusConnected.Bytes())
+	partner.SendMessage(HtmlTemplates.ConnectionStatusConnected.Bytes())
+	client.SendMessage(HtmlTemplates.ActionBtnNew.Bytes())
+	partner.SendMessage(HtmlTemplates.ActionBtnNew.Bytes())
 }
 
 func (h *Hub) handleRegistration(client *Client, HtmlTemplates *preloadedTemplates) {
