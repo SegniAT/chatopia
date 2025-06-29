@@ -28,7 +28,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	var isStrict bool
 	var interests []string
 	sessionId := app.session.GetString(r, "clientSessionId")
-	client, ok := app.hub.OnlineClients.GetClient(sessionId)
+	client, ok := app.hub.Matchmaker.GetClient(sessionId)
 	if ok {
 		isStrict = client.IsStrict
 		interests = client.Interests
@@ -43,7 +43,7 @@ func (app *application) about(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) liveUsers(w http.ResponseWriter, r *http.Request) {
-	component := templates.LiveUsers(app.hub.OnlineClients.Size())
+	component := templates.LiveUsers(app.hub.Matchmaker.ClientsCount())
 	component.Render(r.Context(), w)
 }
 
@@ -70,7 +70,7 @@ func (app *application) chatPost(w http.ResponseWriter, r *http.Request) {
 
 	client := internalWS.NewClient(clientSessionId, chatType, isStrict, interests, app.hub)
 
-	app.hub.OnlineClients.StoreClient(client.SessionID, client)
+	app.hub.Matchmaker.AddClient(client)
 
 	app.logger.InfoContext(r.Context(),
 		"client registered to store",
@@ -86,7 +86,7 @@ func (app *application) chatPost(w http.ResponseWriter, r *http.Request) {
 func (app *application) chat(w http.ResponseWriter, r *http.Request) {
 	sessionId := app.session.GetString(r, "clientSessionId")
 
-	client, ok := app.hub.OnlineClients.GetClient(sessionId)
+	client, ok := app.hub.Matchmaker.GetClient(sessionId)
 	if !ok {
 		w.Header().Set("HX-Redirect", "/")
 		w.WriteHeader(http.StatusSeeOther)
@@ -108,7 +108,7 @@ func (app *application) ServeWs(w http.ResponseWriter, r *http.Request) {
 
 	sessionId := app.session.GetString(r, "clientSessionId")
 
-	client, ok := app.hub.OnlineClients.GetClient(sessionId)
+	client, ok := app.hub.Matchmaker.GetClient(sessionId)
 	if !ok {
 		w.Header().Set("HX-Redirect", "/")
 		w.WriteHeader(http.StatusSeeOther)

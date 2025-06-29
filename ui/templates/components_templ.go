@@ -176,7 +176,7 @@ func StrangerTyping() templ.Component {
 			templ_7745c5c3_Var6 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div id=\"chat_typing\" hx-swap-oob=\"true\" hx-on:htmx:load=\"clearTimeout(window.typingTimer); window.typingTimer = window.setTimeout(function() { htmx.find('#chat_typing').innerHTML = ''}, 3000)\" class=\"flex items-center gap-1 py-1\"><p class=\"text-red-500\">Stranger:</p><img src=\"/assets/typing.gif\" height=\"40\"></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div id=\"chat_typing\" hx-swap-oob=\"true\" hx-on:htmx:load=\"clearTimeout(window.typingTimer); window.typingTimer = window.setTimeout(function() { htmx.find('#chat_typing').innerHTML = ''}, 3000)\" class=\"flex items-center gap-1 py-1\"><p class=\"text-red-500\">Stranger:</p><img src=\"/assets/typing.gif\" height=\"60\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -52,6 +52,7 @@ func (app *application) serve(h slog.Handler) error {
 
 	app.logger.InfoContext(context.Background(), "starting server", slog.String("addr", srv.Addr), slog.String("env", app.config.env))
 
+	//err := srv.ListenAndServeTLS("/home/sgngodsson/Desktop/Chatopia/tls/cert.pem", "/home/sgngodsson/Desktop/Chatopia/tls/key.pem")
 	err := srv.ListenAndServe()
 
 	// ErrServerClosed is returned immidiately after calling Shutdown() ...

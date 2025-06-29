@@ -16,6 +16,74 @@ templ Chat(title string, video bool, interests []string) {
 templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video bool, interests []string) {
 	<div id="chat_inner" hx-swap-oob="outerHTML">
 		<script>
+			// This function sets up all event handlers for an active connection.
+			// It's called by both the caller and the receiver once the connection is established.
+			function setupChat(connection) {
+				console.log('PeerJS DataConnection is open. Setting up chat handlers.');
+				const chatBubbles = document.querySelector("#chat_bubbles");
+				
+				// Handle incoming data (messages from stranger)
+				connection.on('data', data => {
+					newChatBubble(data, false);
+				});
+
+				const chatForm = document.querySelector("#chat_form");
+				const textarea = chatForm.querySelector("#chat_message");
+				const sendChatButton = document.querySelector("#send_chat_button");
+
+				// CRITICAL: To prevent multiple listeners on reconnect, clone the button to remove old listeners.
+				const newButton = sendChatButton.cloneNode(true);
+				sendChatButton.parentNode.replaceChild(newButton, sendChatButton);
+
+
+				// Handle outgoing data (sending a message)
+				newButton.addEventListener("click", (e) => {
+					const message = textarea.value.trim();
+
+					if (message) {
+						newChatBubble(message, true);
+						connection.send(message);
+						textarea.value = "";
+					}
+				});
+
+				textarea.addEventListener('keydown', e => {
+					if(e.key == 'Enter' && !e.shiftKey){
+						e.preventDefault();
+						newButton.click();
+					}
+				});
+				
+			}
+
+			function newChatBubble(message, isMe) {
+				const wrapper = document.createElement("div");
+				wrapper.classList.add("flex", "gap-1", "w-full", isMe ? "justify-end" : "justify-start");
+
+				const innerWrapper = document.createElement("div");
+				if (isMe) {
+					innerWrapper.classList.add("flex", "gap-2", "p-2", "rounded-lg", "max-w-xs", "bg-blue-500", "text-white");
+				} else {
+					innerWrapper.classList.add("flex", "gap-2", "p-2", "rounded-lg", "max-w-xs", "bg-gray-200", "text-gray-800");
+				}
+
+				// const who = document.createElement("p");
+				// who.textContent = isMe ? "You:" : "Stranger:";
+				// who.classList.add("font-bold");
+
+				const msg = document.createElement("p");
+				msg.classList.add("text-wrap", "whitespace-pre-line");
+				msg.innerText = message;
+
+				innerWrapper.append(msg);
+				wrapper.appendChild(innerWrapper);
+
+				const chatBubbles = document.querySelector("#chat_bubbles");
+				chatBubbles.appendChild(wrapper);
+				wrapper.scrollIntoView({ block: "end", behavior: "smooth" });
+			}
+		</script>
+		<script>
 			// TODO: maybe handle 
 			// Peer:           'close', 'disconnected' and 'error' events AND
 			// DataConnection: 'close' and 'error' events gracefully
@@ -28,9 +96,10 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 			if ({{ peerID }} !== {{ uuid.Nil }}) {
 				console.log("Creating new Peer object with ID:", "{{ peerID }}");
 				window.peer = new Peer({{ peerID }}, {
-					host: "/",
-					port: 9000,
+					//host: "192.168.115.47",
+					//port: 9000,
 					debug: 1,
+					//secure: true,
 					config: {
 						'iceServers': [
 							{ urls: "stun:stun.l.google.com:19302" },
@@ -77,75 +146,69 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 					}
 				})
 			}
-
-			
-
-			// This function sets up all event handlers for an active connection.
-			// It's called by both the caller and the receiver once the connection is established.
-			function setupChat(connection) {
-				console.log('PeerJS DataConnection is open. Setting up chat handlers.');
-				const chatBubbles = document.querySelector("#chat_bubbles");
-				
-				// Handle incoming data (messages from stranger)
-				connection.on('data', data => {
-					newChatBubble(data, false);
-				});
-
-				const chatForm = document.querySelector("#chat_form");
-				const textarea = chatForm.querySelector("#chat_message");
-				const sendChatButton = document.querySelector("#send_chat_button");
-
-				// CRITICAL: To prevent multiple listeners on reconnect, clone the button to remove old listeners.
-				const newButton = sendChatButton.cloneNode(true);
-				sendChatButton.parentNode.replaceChild(newButton, sendChatButton);
-
-
-				// Handle outgoing data (sending a message)
-				newButton.addEventListener("click", (e) => {
-					const message = textarea.value.trim();
-
-					if (message) {
-						newChatBubble(message, true);
-						connection.send(message);
-						textarea.value = "";
-					}
-				});
-
-				textarea.addEventListener('keydown', e => {
-					if(e.key == 'Enter' && !e.shiftkey){
-						e.preventDefault();
-						newButton.click();
-					}
-				});
-				
-			}
-
-			function newChatBubble(message, isMe) {
-				const wrapper = document.createElement("div");
-				wrapper.classList.add("flex", "gap-1", "w-full", isMe ? "justify-end" : "justify-start");
-
-				const innerWrapper = document.createElement("div");
-				if (isMe) {
-					innerWrapper.classList.add("flex", "gap-2", "p-2", "rounded-lg", "max-w-xs", "bg-blue-500", "text-white");
-				} else {
-					innerWrapper.classList.add("flex", "gap-2", "p-2", "rounded-lg", "max-w-xs", "bg-gray-200", "text-gray-800");
+		</script>
+		if video {
+			<script>
+				function addVideoStream (videoElement, stream){
+					videoElement.srcObject = stream
+					videoElement.style.transform = 'scaleX(-1)';
+					videoElement.addEventListener('loadedmetadata', () => {
+						videoElement.play();
+					});
 				}
 
-				// const who = document.createElement("p");
-				// who.textContent = isMe ? "You:" : "Stranger:";
-				// who.classList.add("font-bold");
+			if ({{ peerID }} !== {{ uuid.Nil }} && window.peer && navigator) {
+				navigator.mediaDevices.getUserMedia({
+					video: true,
+					audio: true
+				}).then(stream => {
+					const isCaller = {{ isCaller }};
+					const localVideo= document.querySelector("#local_video");
+					const remoteVideo= document.querySelector("#remote_video");
 
-				const msg = document.createElement("p");
-				msg.textContent = message;
+					addVideoStream(localVideo, stream);
+					
+					 if (isCaller){
+						console.log("📹 VIDEO CALL: initiated");
+					 	const call = window.peer.call({{ strangerPeerID }}, stream);
+						call.on('stream', partnerStream => {
+							console.log("📹 VIDEO CALL: (caller) stream partnerStream accepted ", partnerStream);
+							if (remoteVideo) {
+								addVideoStream(remoteVideo, partnerStream);
+							}
+						})
+						call.on('close', () => {
+							if (remoteVideo) {
+								remoteVideo.srcObject = null;
+							}
+						});
 
-				innerWrapper.append(msg);
-				wrapper.appendChild(innerWrapper);
+						call.on('error', err => {
+							console.log("📹 VIDEO CALL: (caller) ", err);
+						});
 
-				const chatBubbles = document.querySelector("#chat_bubbles");
-				chatBubbles.appendChild(wrapper);
-				wrapper.scrollIntoView({ block: "end", behavior: "smooth" });
-			}	
-		</script>
+					 }else{
+						console.log("📹 VIDEO CALL: waiting for call");
+						peer.on('call', call => {
+							console.log("📹 VIDEO CALL: received");
+							call.answer(stream);
+
+							call.on('stream', callerStream => {
+								if (remoteVideo) {
+									addVideoStream(remoteVideo, callerStream);
+								}
+							});
+
+							call.on('error', err => {
+								console.log("📹 VIDEO CALL: (receiver) ", err);
+							});
+						});
+					}
+				});
+			}
+				
+			</script>
+		}
 		<div id="chat_inner_content" class="py-4 flex gap-2">
 			if video {
 				<div class="">

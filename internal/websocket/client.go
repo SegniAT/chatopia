@@ -28,7 +28,7 @@ type Client struct {
 
 	SessionID   string   `json:"session_id"`
 	ChatPartner *Client  `json:"-"`
-	ChatType    string   `json:"chat_type"`
+	ChatType    string   `json:"chat_type"` // TODO: change to a type/enum
 	IsStrict    bool     `json:"is_strict"`
 	Interests   []string `json:"interests"`
 }
@@ -38,6 +38,8 @@ func (c Client) LogValue() slog.Value {
 		slog.String("session_id", c.SessionID),
 		slog.String("chat_type", c.ChatType),
 		slog.Any("interests", c.Interests),
+		slog.Bool("searching", c.Searching),
+		slog.Bool("has_partner", c.ChatPartner != nil),
 	)
 }
 

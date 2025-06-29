@@ -1,5 +1,7 @@
 package templates 
 
+import "time"
+
 templ Base(title string) {
 	<!DOCTYPE html>
 	<html>
@@ -16,16 +18,18 @@ templ Base(title string) {
 			<link rel="manifest" href="/assets/site.webmanifest"/>
 			<link rel="stylesheet" href="/assets/style.css"/>
 		</head>
-		<body class="bg-chatopia-2 text-chatopia-5 max-w-7xl my-0 mx-auto px-8 md:px-12 lg:px-4 min-h-full">
-			<header>
-				@Navigation()
-			</header>
-			<main>
-				{ children... }
-			</main>
-			<footer class="mt-auto">
-				@Footer()
-			</footer>
+		<body class="bg-chatopia-2 text-chatopia-5 h-full">
+			<div class="min-h-screen flex flex-col max-w-7xl mx-auto px-8 md:px-12 lg:px-4">
+				<header>
+					@Navigation()
+				</header>
+				<main class="flex-grow">
+					{ children... }
+				</main>
+				<footer class="border-t border-chatopia-3/50 py-6 text-sm text-chatopia-5/70 text-center">
+					@Footer()
+				</footer>
+			</div>
 		</body>
 	</html>
 }
@@ -40,7 +44,7 @@ templ Navigation() {
 			</li>
 			<div class="flex gap-4">
 				<li>
-					@LiveUsers(0)
+					//@LiveUsers(0)
 				</li>
 				<li><a class="hover:text-chatopia-1" href="/about">About</a></li>
 			</div>
@@ -49,5 +53,10 @@ templ Navigation() {
 }
 
 templ Footer() {
-	<div class="pt-28">.</div>
+	<div>
+		<p>&copy; { time.Now().Year() } Chatopia. Built for Ethiopia, with ❤️ and WebRTC.</p>
+		<p>
+			<a href="/about" class="hover:text-chatopia-1 underline">About</a>
+		</p>
+	</div>
 }

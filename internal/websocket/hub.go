@@ -6,37 +6,36 @@ import (
 	"fmt"
 	"log/slog"
 	"sync"
-	"time"
 
 	"github.com/SegniAdebaGodsSon/ui/templates"
 	"github.com/a-h/templ"
 	"github.com/google/uuid"
 )
 
-const (
-	SEARCH_RETRIES    = 5
-	SEARCH_RETRY_WAIT = time.Second * 3
-	CLEANUP_PERIOD    = time.Second * 10
-)
+var HtmlTemplates *preloadedTemplates
+
+func init() {
+	HtmlTemplates = preloadTemplates()
+}
 
 type Hub struct {
-	OnlineClients *OnlineClients
-	register      chan *Client
-	unregister    chan *Client
-	Recieve       chan *Message
-	ctx           context.Context
-	wg            sync.WaitGroup
-	logger        *slog.Logger
+	Matchmaker *Matchmaker
+	register   chan *Client
+	unregister chan *Client
+	Recieve    chan *Message
+	ctx        context.Context
+	wg         sync.WaitGroup
+	logger     *slog.Logger
 }
 
 func NewHub(ctx context.Context, logger *slog.Logger) *Hub {
 	return &Hub{
-		OnlineClients: NewOnlineClientsStore(logger),
-		Recieve:       make(chan *Message),
-		register:      make(chan *Client),
-		unregister:    make(chan *Client),
-		ctx:           ctx,
-		logger:        logger,
+		Matchmaker: NewMatchmaker(logger),
+		Recieve:    make(chan *Message),
+		register:   make(chan *Client),
+		unregister: make(chan *Client),
+		ctx:        ctx,
+		logger:     logger,
 	}
 }
 
@@ -56,156 +55,65 @@ func (h *Hub) UnregisterClient(client *Client) error {
 	return nil
 }
 
-/*
-func (h *Hub) RunMatchmaker(HtmlTemplates *preloadedTemplates) {
-	for {
-		select {
-		case client := <-h.queue:
-			h.connectToClient(client, HtmlTemplates)
-		}
-	}
-}
-*/
-
 func (h *Hub) Run() {
 	defer func() {
+		h.Matchmaker.Stop()
 		if r := recover(); r != nil {
 			h.logger.ErrorContext(context.Background(), "panic in Hub.Run", slog.Any("error", r))
 		}
 	}()
 
+	h.Matchmaker.onPair = h.handleMatchedPair
+	h.Matchmaker.onTimeout = h.handleMatchTimeout
+
 	h.logger.InfoContext(context.Background(), "Hub has started running")
-
-	go h.cleanDisconnectedClients()
-
-	HtmlTemplates := preloadTemplates()
 
 	for {
 		select {
 		case <-h.ctx.Done():
+			h.Matchmaker.Stop()
 			h.wg.Wait()
 			return
 
 		case client := <-h.register:
 			h.wg.Add(1)
-			go h.handleRegistration(client, HtmlTemplates)
+			go h.handleRegistration(client)
 
 		case client := <-h.unregister:
 			h.wg.Add(1)
-			go h.handleUnregistration(client, HtmlTemplates)
+			go h.handleUnregistration(client)
 
 		case message := <-h.Recieve:
 			h.wg.Add(1)
-			go h.handleMessage(message, HtmlTemplates)
+			go h.handleMessage(message)
 		}
 	}
 }
 
-func (h *Hub) cleanDisconnectedClients() {
-	go func() {
-		ticker := time.NewTicker(CLEANUP_PERIOD)
-		defer ticker.Stop()
+func (h *Hub) handleRegistration(client *Client) {
+	h.logger.Debug("handleRegistration called", slog.Any("client", client))
 
-		for {
-			select {
-			case <-h.ctx.Done():
-				return
-			case <-ticker.C:
-				h.checkClients()
-			}
+	defer func() {
+		if r := recover(); r != nil {
+			h.logger.ErrorContext(context.Background(), "panic in Hub.handleRegistration", slog.Any("error", r))
 		}
 	}()
-}
 
-func (h *Hub) checkClients() {
-	h.OnlineClients.Range(func(key, value any) bool {
-		client, ok := value.(*Client)
-		if !ok {
-			return true
-		}
-
-		if !client.IsActive() {
-			h.OnlineClients.DeleteClient(client.SessionID)
-		}
-
-		return true
-	})
-}
-
-func (h *Hub) connectToClient(client *Client, HtmlTemplates *preloadedTemplates) {
-	h.logger.Debug("connectToClient called", slog.Any("client", client))
+	defer h.wg.Done()
 
 	client.SendMessage(HtmlTemplates.ConnectionStatusSearching.Bytes())
 	client.SendMessage(HtmlTemplates.ActionBtnSearching.Bytes())
 
-	h.logger.Debug("finding matching client...")
-
-	partner := h.OnlineClients.FindMatchingClient(client.SessionID, SEARCH_RETRIES, SEARCH_RETRY_WAIT)
-
-	if client.ChatPartner != nil {
-		h.logger.Debug("matching client already found")
-		return
-	}
-
-	if partner == nil {
-		h.logger.Debug("matching client not found")
-
-		client.SendMessage(HtmlTemplates.ConnectionStatusNoClientsFound.Bytes())
-		client.SendMessage(HtmlTemplates.ActionBtnNew.Bytes())
-		return
-	}
-
-	h.logger.Debug("matching client found, attempting to connect")
-	err := client.Connect(partner)
-	if err != nil {
-		h.logger.Debug("PARTNER: ", slog.Any("partner", partner))
-		h.logger.Debug("matching client found, could not connect to found client", slog.String("error", err.Error()))
-		client.SendMessage(HtmlTemplates.ConnectionStatusDisconnected.Bytes())
-		return
-	}
-
-	chatInnerClientBytesBuffer := bytes.NewBuffer(nil)
-	chatInnerStrangerBytesBuffer := bytes.NewBuffer(nil)
-	var peerID = uuid.New()
-	var strangerPeerID = uuid.New()
-
-	templates.ChatInner(
-		peerID,
-		strangerPeerID,
-		true,
-		client.ChatType == "video",
-		client.Interests,
-	).Render(h.ctx, chatInnerClientBytesBuffer)
-
-	templates.ChatInner(
-		strangerPeerID,
-		peerID,
-		false,
-		partner.ChatType == "video",
-		partner.Interests,
-	).Render(h.ctx, chatInnerStrangerBytesBuffer)
-
-	client.SendMessage(chatInnerClientBytesBuffer.Bytes())
-	partner.SendMessage(chatInnerStrangerBytesBuffer.Bytes())
-
-	client.SendMessage(HtmlTemplates.ConnectionStatusConnected.Bytes())
-	partner.SendMessage(HtmlTemplates.ConnectionStatusConnected.Bytes())
-	client.SendMessage(HtmlTemplates.ActionBtnNew.Bytes())
-	partner.SendMessage(HtmlTemplates.ActionBtnNew.Bytes())
+	h.Matchmaker.Submit(client)
 }
 
-func (h *Hub) handleRegistration(client *Client, HtmlTemplates *preloadedTemplates) {
-	h.logger.Debug("handleRegistration called", slog.Any("client", client))
-	defer h.wg.Done()
+func (h *Hub) handleUnregistration(client *Client) {
+	defer func() {
+		if r := recover(); r != nil {
+			h.logger.ErrorContext(context.Background(), "panic in Hub.handleUnregistration", slog.Any("error", r))
+		}
+	}()
 
-	if client == nil {
-		return
-	}
-
-	h.connectToClient(client, HtmlTemplates)
-}
-
-func (h *Hub) handleUnregistration(client *Client, HtmlTemplates *preloadedTemplates) {
 	h.logger.Debug("handleUnregistration called", slog.Any("client", client))
 	defer h.wg.Done()
 
@@ -213,16 +121,74 @@ func (h *Hub) handleUnregistration(client *Client, HtmlTemplates *preloadedTempl
 		return
 	}
 
-	partner := client.Disconnect()
+	h.Matchmaker.RemoveClient(client.SessionID)
+
+	renderAndSend := func(c *Client, peerID, strangerPeerID uuid.UUID, isClient bool) {
+		buf := bytes.NewBuffer(nil)
+		templates.ChatInner(
+			peerID,
+			strangerPeerID,
+			isClient,
+			c.ChatType == "video",
+			c.Interests,
+		).Render(h.ctx, buf)
+
+		c.SendMessage(buf.Bytes())
+	}
+
+	renderAndSend(client, uuid.Nil, uuid.Nil, true)
 	client.SendMessage(HtmlTemplates.ConnectionStatusDisconnected.Bytes())
 
+	partner := client.Disconnect()
 	if partner != nil {
 		partner.Disconnect()
+		renderAndSend(partner, uuid.Nil, uuid.Nil, false)
 		partner.SendMessage(HtmlTemplates.ConnectionStatusDisconnected.Bytes())
 	}
 }
 
-func (h *Hub) handleMessage(message *Message, HtmlTemplates *preloadedTemplates) {
+func (h *Hub) handleMatchedPair(c1, c2 *Client) {
+	c1.Connect(c2)
+
+	// Generate peer IDs
+	peer1 := uuid.New()
+	peer2 := uuid.New()
+
+	renderAndSend := func(c *Client, peerID, strangerPeerID uuid.UUID, isClient bool) {
+		buf := bytes.NewBuffer(nil)
+		templates.ChatInner(
+			peerID,
+			strangerPeerID,
+			isClient,
+			c.ChatType == "video",
+			c.Interests,
+		).Render(h.ctx, buf)
+
+		c.SendMessage(buf.Bytes())
+	}
+
+	renderAndSend(c1, peer1, peer2, true)
+	renderAndSend(c2, peer2, peer1, false)
+
+	// Send status updates
+	c1.SendMessage(HtmlTemplates.ConnectionStatusConnected.Bytes())
+	c2.SendMessage(HtmlTemplates.ConnectionStatusConnected.Bytes())
+	c1.SendMessage(HtmlTemplates.ActionBtnNew.Bytes())
+	c2.SendMessage(HtmlTemplates.ActionBtnNew.Bytes())
+}
+
+func (h *Hub) handleMatchTimeout(client *Client) {
+	client.SendMessage(HtmlTemplates.ConnectionStatusNoClientsFound.Bytes())
+	client.SendMessage(HtmlTemplates.ActionBtnNew.Bytes())
+}
+
+func (h *Hub) handleMessage(message *Message) {
+	defer func() {
+		if r := recover(); r != nil {
+			h.logger.ErrorContext(context.Background(), "panic in Hub.handleMessage", slog.Any("error", r))
+		}
+	}()
+
 	defer h.wg.Done()
 
 	message_type := message.Type
@@ -230,11 +196,11 @@ func (h *Hub) handleMessage(message *Message, HtmlTemplates *preloadedTemplates)
 	case "chat_message":
 		h.handleChatMessage(message)
 	case "typing":
-		h.handleTypingMessage(message, HtmlTemplates)
+		h.handleTypingMessage(message)
 	case "end_connection":
-		h.handleEndCallMessage(message, HtmlTemplates)
+		h.handleEndCallMessage(message)
 	case "new_connection":
-		h.handleNewCallMessage(message, HtmlTemplates)
+		h.handleNewCallMessage(message)
 	}
 }
 
@@ -262,7 +228,7 @@ func (h *Hub) handleChatMessage(message *Message) {
 	partner.SendMessage(html.Bytes())
 }
 
-func (h *Hub) handleTypingMessage(message *Message, HtmlTemplates *preloadedTemplates) {
+func (h *Hub) handleTypingMessage(message *Message) {
 	h.logger.Debug("handleTypingMessage called", slog.Any("message", message))
 	client := message.From
 	if client == nil {
@@ -277,7 +243,7 @@ func (h *Hub) handleTypingMessage(message *Message, HtmlTemplates *preloadedTemp
 
 }
 
-func (h *Hub) handleNewCallMessage(message *Message, HtmlTemplates *preloadedTemplates) {
+func (h *Hub) handleNewCallMessage(message *Message) {
 	h.logger.Debug("handleNewCallMessage called", slog.Any("message", message))
 	client := message.From
 	if client == nil {
@@ -291,10 +257,13 @@ func (h *Hub) handleNewCallMessage(message *Message, HtmlTemplates *preloadedTem
 		partner.SendMessage(HtmlTemplates.ConnectionStatusDisconnected.Bytes())
 	}
 
-	h.connectToClient(client, HtmlTemplates)
+	client.SendMessage(HtmlTemplates.ConnectionStatusSearching.Bytes())
+	client.SendMessage(HtmlTemplates.ActionBtnSearching.Bytes())
+
+	h.Matchmaker.Submit(client)
 }
 
-func (h *Hub) handleEndCallMessage(message *Message, HtmlTemplates *preloadedTemplates) {
+func (h *Hub) handleEndCallMessage(message *Message) {
 	h.logger.Debug("handleEndCallMessage called", slog.Any("message", message))
 	client := message.From
 	if client == nil {

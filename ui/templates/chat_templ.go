@@ -94,13 +94,13 @@ func ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video 
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div id=\"chat_inner\" hx-swap-oob=\"outerHTML\"><script>\n\t\t\tif (window.peer) {\n\t\t\t\tconsole.log(\"Destroying previous Peer object.\");\n\t\t\t\twindow.peer.destroy();\n\t\t\t}\n\n\t\t\t// Use a single, persistent peer object. 'var' prevents re-declaration errors from HTMX swaps.\n\t\t\tif (")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div id=\"chat_inner\" hx-swap-oob=\"outerHTML\"><script>\n\t\t\t// This function sets up all event handlers for an active connection.\n\t\t\t// It's called by both the caller and the receiver once the connection is established.\n\t\t\tfunction setupChat(connection) {\n\t\t\t\tconsole.log('PeerJS DataConnection is open. Setting up chat handlers.');\n\t\t\t\tconst chatBubbles = document.querySelector(\"#chat_bubbles\");\n\t\t\t\t\n\t\t\t\t// Handle incoming data (messages from stranger)\n\t\t\t\tconnection.on('data', data => {\n\t\t\t\t\tnewChatBubble(data, false);\n\t\t\t\t});\n\n\t\t\t\tconst chatForm = document.querySelector(\"#chat_form\");\n\t\t\t\tconst textarea = chatForm.querySelector(\"#chat_message\");\n\t\t\t\tconst sendChatButton = document.querySelector(\"#send_chat_button\");\n\n\t\t\t\t// CRITICAL: To prevent multiple listeners on reconnect, clone the button to remove old listeners.\n\t\t\t\tconst newButton = sendChatButton.cloneNode(true);\n\t\t\t\tsendChatButton.parentNode.replaceChild(newButton, sendChatButton);\n\n\n\t\t\t\t// Handle outgoing data (sending a message)\n\t\t\t\tnewButton.addEventListener(\"click\", (e) => {\n\t\t\t\t\tconst message = textarea.value.trim();\n\n\t\t\t\t\tif (message) {\n\t\t\t\t\t\tnewChatBubble(message, true);\n\t\t\t\t\t\tconnection.send(message);\n\t\t\t\t\t\ttextarea.value = \"\";\n\t\t\t\t\t}\n\t\t\t\t});\n\n\t\t\t\ttextarea.addEventListener('keydown', e => {\n\t\t\t\t\tif(e.key == 'Enter' && !e.shiftKey){\n\t\t\t\t\t\te.preventDefault();\n\t\t\t\t\t\tnewButton.click();\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t\t\n\t\t\t}\n\n\t\t\tfunction newChatBubble(message, isMe) {\n\t\t\t\tconst wrapper = document.createElement(\"div\");\n\t\t\t\twrapper.classList.add(\"flex\", \"gap-1\", \"w-full\", isMe ? \"justify-end\" : \"justify-start\");\n\n\t\t\t\tconst innerWrapper = document.createElement(\"div\");\n\t\t\t\tif (isMe) {\n\t\t\t\t\tinnerWrapper.classList.add(\"flex\", \"gap-2\", \"p-2\", \"rounded-lg\", \"max-w-xs\", \"bg-blue-500\", \"text-white\");\n\t\t\t\t} else {\n\t\t\t\t\tinnerWrapper.classList.add(\"flex\", \"gap-2\", \"p-2\", \"rounded-lg\", \"max-w-xs\", \"bg-gray-200\", \"text-gray-800\");\n\t\t\t\t}\n\n\t\t\t\t// const who = document.createElement(\"p\");\n\t\t\t\t// who.textContent = isMe ? \"You:\" : \"Stranger:\";\n\t\t\t\t// who.classList.add(\"font-bold\");\n\n\t\t\t\tconst msg = document.createElement(\"p\");\n\t\t\t\tmsg.classList.add(\"text-wrap\", \"whitespace-pre-line\");\n\t\t\t\tmsg.innerText = message;\n\n\t\t\t\tinnerWrapper.append(msg);\n\t\t\t\twrapper.appendChild(innerWrapper);\n\n\t\t\t\tconst chatBubbles = document.querySelector(\"#chat_bubbles\");\n\t\t\t\tchatBubbles.appendChild(wrapper);\n\t\t\t\twrapper.scrollIntoView({ block: \"end\", behavior: \"smooth\" });\n\t\t\t}\n\t\t</script><script>\n\t\t\t// TODO: maybe handle \n\t\t\t// Peer:           'close', 'disconnected' and 'error' events AND\n\t\t\t// DataConnection: 'close' and 'error' events gracefully\n\t\t\tif (window.peer) {\n\t\t\t\tconsole.log(\"Destroying previous Peer object.\");\n\t\t\t\twindow.peer.destroy();\n\t\t\t}\n\n\t\t\t// Use a single, persistent peer object. 'var' prevents re-declaration errors from HTMX swaps.\n\t\t\tif (")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Var4, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(peerID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 25, Col: 16}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 96, Col: 16}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 		if templ_7745c5c3_Err != nil {
@@ -112,7 +112,7 @@ func ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video 
 		}
 		templ_7745c5c3_Var5, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(uuid.Nil)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 25, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 96, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
@@ -124,7 +124,7 @@ func ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video 
 		}
 		templ_7745c5c3_Var6, templ_7745c5c3_Err := templruntime.ScriptContentInsideStringLiteral(peerID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 26, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 97, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 		if templ_7745c5c3_Err != nil {
@@ -136,19 +136,19 @@ func ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video 
 		}
 		templ_7745c5c3_Var7, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(peerID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 27, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 98, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, ", {\n\t\t\t\t\thost: \"/\",\n\t\t\t\t\tport: 9000,\n\t\t\t\t\tdebug: 1,\n\t\t\t\t\tconfig: {\n\t\t\t\t\t\t'iceServers': [\n\t\t\t\t\t\t\t{ urls: \"stun:stun.l.google.com:19302\" },\n\t\t\t\t\t\t\t{ urls: \"turn:turn.bistri.com:80\", username: \"homeo\", credential: \"homeo\" }\n\t\t\t\t\t\t]\n\t\t\t\t\t}\n\t\t\t\t});\n\n\t\t\t\twindow.peer.on('error', err => {\n\t\t\t\t\tconsole.error('PeerJS error:', err.type, err);\n\t\t\t\t});\n\n\t\t\t\twindow.peer.on('open', id => {\n\t\t\t\t\tconsole.log('My peer ID is now registered with the server:', id);\n\n\t\t\t\t\t// We only try to connect if we have a strangerPeerID and a valid peer object.\n\t\t\t\t\tif (")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, ", {\n\t\t\t\t\t//host: \"192.168.115.47\",\n\t\t\t\t\t//port: 9000,\n\t\t\t\t\tdebug: 1,\n\t\t\t\t\t//secure: true,\n\t\t\t\t\tconfig: {\n\t\t\t\t\t\t'iceServers': [\n\t\t\t\t\t\t\t{ urls: \"stun:stun.l.google.com:19302\" },\n\t\t\t\t\t\t\t{ urls: \"turn:turn.bistri.com:80\", username: \"homeo\", credential: \"homeo\" }\n\t\t\t\t\t\t]\n\t\t\t\t\t}\n\t\t\t\t});\n\n\t\t\t\twindow.peer.on('error', err => {\n\t\t\t\t\tconsole.error('PeerJS error:', err.type, err);\n\t\t\t\t});\n\n\t\t\t\twindow.peer.on('open', id => {\n\t\t\t\t\tconsole.log('My peer ID is now registered with the server:', id);\n\n\t\t\t\t\t// We only try to connect if we have a strangerPeerID and a valid peer object.\n\t\t\t\t\tif (")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Var8, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(strangerPeerID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 47, Col: 26}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 119, Col: 26}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 		if templ_7745c5c3_Err != nil {
@@ -160,7 +160,7 @@ func ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video 
 		}
 		templ_7745c5c3_Var9, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(uuid.Nil)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 47, Col: 45}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 119, Col: 45}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -172,7 +172,7 @@ func ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video 
 		}
 		templ_7745c5c3_Var10, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(isCaller)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 48, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 120, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 		if templ_7745c5c3_Err != nil {
@@ -184,7 +184,7 @@ func ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video 
 		}
 		templ_7745c5c3_Var11, templ_7745c5c3_Err := templruntime.ScriptContentInsideStringLiteral(strangerPeerID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 52, Col: 75}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 124, Col: 75}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 		if templ_7745c5c3_Err != nil {
@@ -196,18 +196,76 @@ func ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video 
 		}
 		templ_7745c5c3_Var12, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(strangerPeerID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 54, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 126, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, ");\n\n\t\t\t\t\t\t\tconn.on('error', err => console.error('Connection error (caller):', err));\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t// The 'open' event signals a successful connection for the caller.\n\t\t\t\t\t\t\tconn.on('open', () => {\n\t\t\t\t\t\t\t\tconsole.log(\"Successfull call: \", conn)\n\t\t\t\t\t\t\t\tsetupChat(conn);\n\t\t\t\t\t\t\t});\n\n\t\t\t\t\t\t} else {\n\t\t\t\t\t\t\tconsole.log(\"Acting as RECEIVER. Waiting for connection...\");\n\n\t\t\t\t\t\t\twindow.peer.on('connection', (connection) => {\n\t\t\t\t\t\t\t\tconsole.log(\"Incoming connection received.\", connection);\n\t\t\t\t\t\t\t\tconn = connection;\n\t\t\t\t\t\t\t\tconn.on('error', err => console.error('Connection error (receiver):', err));\n\t\t\t\t\t\t\t\tsetupChat(conn);\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t})\n\t\t\t}\n\n\t\t\t\n\n\t\t\t// This function sets up all event handlers for an active connection.\n\t\t\t// It's called by both the caller and the receiver once the connection is established.\n\t\t\tfunction setupChat(connection) {\n\t\t\t\tconsole.log('PeerJS DataConnection is open. Setting up chat handlers.');\n\t\t\t\tconst chatBubbles = document.querySelector(\"#chat_bubbles\");\n\t\t\t\t\n\t\t\t\t// Handle incoming data (messages from stranger)\n\t\t\t\tconnection.on('data', data => {\n\t\t\t\t\tnewChatBubble(data, false);\n\t\t\t\t});\n\n\t\t\t\tconst chatForm = document.querySelector(\"#chat_form\");\n\t\t\t\tconst textarea = chatForm.querySelector(\"#chat_message\");\n\t\t\t\tconst sendChatButton = document.querySelector(\"#send_chat_button\");\n\n\t\t\t\t// CRITICAL: To prevent multiple listeners on reconnect, clone the button to remove old listeners.\n\t\t\t\tconst newButton = sendChatButton.cloneNode(true);\n\t\t\t\tsendChatButton.parentNode.replaceChild(newButton, sendChatButton);\n\n\n\t\t\t\t// Handle outgoing data (sending a message)\n\t\t\t\tnewButton.addEventListener(\"click\", (e) => {\n\t\t\t\t\tconst message = textarea.value.trim();\n\n\t\t\t\t\tif (message) {\n\t\t\t\t\t\tnewChatBubble(message, true);\n\t\t\t\t\t\tconnection.send(message);\n\t\t\t\t\t\ttextarea.value = \"\";\n\t\t\t\t\t}\n\t\t\t\t});\n\n\t\t\t\ttextarea.addEventListener('keydown', e => {\n\t\t\t\t\tif(e.key == 'Enter' && !e.shiftkey){\n\t\t\t\t\t\te.preventDefault();\n\t\t\t\t\t\tnewButton.click();\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t\t\n\t\t\t}\n\n\t\t\tfunction newChatBubble(message, isMe) {\n\t\t\t\tconst wrapper = document.createElement(\"div\");\n\t\t\t\twrapper.classList.add(\"flex\", \"gap-1\", \"w-full\", isMe ? \"justify-end\" : \"justify-start\");\n\n\t\t\t\tconst innerWrapper = document.createElement(\"div\");\n\t\t\t\tif (isMe) {\n\t\t\t\t\tinnerWrapper.classList.add(\"flex\", \"gap-2\", \"p-2\", \"rounded-lg\", \"max-w-xs\", \"bg-blue-500\", \"text-white\");\n\t\t\t\t} else {\n\t\t\t\t\tinnerWrapper.classList.add(\"flex\", \"gap-2\", \"p-2\", \"rounded-lg\", \"max-w-xs\", \"bg-gray-200\", \"text-gray-800\");\n\t\t\t\t}\n\n\t\t\t\t// const who = document.createElement(\"p\");\n\t\t\t\t// who.textContent = isMe ? \"You:\" : \"Stranger:\";\n\t\t\t\t// who.classList.add(\"font-bold\");\n\n\t\t\t\tconst msg = document.createElement(\"p\");\n\t\t\t\tmsg.textContent = message;\n\n\t\t\t\tinnerWrapper.append(msg);\n\t\t\t\twrapper.appendChild(innerWrapper);\n\n\t\t\t\tconst chatBubbles = document.querySelector(\"#chat_bubbles\");\n\t\t\t\tchatBubbles.appendChild(wrapper);\n\t\t\t\twrapper.scrollIntoView({ block: \"end\", behavior: \"smooth\" });\n\t\t\t}\t\n\t\t</script><div id=\"chat_inner_content\" class=\"py-4 flex gap-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, ");\n\n\t\t\t\t\t\t\tconn.on('error', err => console.error('Connection error (caller):', err));\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t// The 'open' event signals a successful connection for the caller.\n\t\t\t\t\t\t\tconn.on('open', () => {\n\t\t\t\t\t\t\t\tconsole.log(\"Successfull call: \", conn)\n\t\t\t\t\t\t\t\tsetupChat(conn);\n\t\t\t\t\t\t\t});\n\n\t\t\t\t\t\t} else {\n\t\t\t\t\t\t\tconsole.log(\"Acting as RECEIVER. Waiting for connection...\");\n\n\t\t\t\t\t\t\twindow.peer.on('connection', (connection) => {\n\t\t\t\t\t\t\t\tconsole.log(\"Incoming connection received.\", connection);\n\t\t\t\t\t\t\t\tconn = connection;\n\t\t\t\t\t\t\t\tconn.on('error', err => console.error('Connection error (receiver):', err));\n\t\t\t\t\t\t\t\tsetupChat(conn);\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t})\n\t\t\t}\n\t\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if video {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<div class=\"\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<script>\n\t\t\t\tfunction addVideoStream (videoElement, stream){\n\t\t\t\t\tvideoElement.srcObject = stream\n\t\t\t\t\tvideoElement.style.transform = 'scaleX(-1)';\n\t\t\t\t\tvideoElement.addEventListener('loadedmetadata', () => {\n\t\t\t\t\t\tvideoElement.play();\n\t\t\t\t\t});\n\t\t\t\t}\n\n\t\t\tif (")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Var13, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(peerID)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 160, Col: 16}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, " !== ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Var14, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(uuid.Nil)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 160, Col: 35}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, " && window.peer && navigator) {\n\t\t\t\tnavigator.mediaDevices.getUserMedia({\n\t\t\t\t\tvideo: true,\n\t\t\t\t\taudio: true\n\t\t\t\t}).then(stream => {\n\t\t\t\t\tconst isCaller = ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Var15, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(isCaller)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 165, Col: 33}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, ";\n\t\t\t\t\tconst localVideo= document.querySelector(\"#local_video\");\n\t\t\t\t\tconst remoteVideo= document.querySelector(\"#remote_video\");\n\n\t\t\t\t\taddVideoStream(localVideo, stream);\n\t\t\t\t\t\n\t\t\t\t\t if (isCaller){\n\t\t\t\t\t\tconsole.log(\"📹 VIDEO CALL: initiated\");\n\t\t\t\t\t \tconst call = window.peer.call(")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Var16, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(strangerPeerID)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 173, Col: 54}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, ", stream);\n\t\t\t\t\t\tcall.on('stream', partnerStream => {\n\t\t\t\t\t\t\tconsole.log(\"📹 VIDEO CALL: (caller) stream partnerStream accepted \", partnerStream);\n\t\t\t\t\t\t\tif (remoteVideo) {\n\t\t\t\t\t\t\t\taddVideoStream(remoteVideo, partnerStream);\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t})\n\t\t\t\t\t\tcall.on('close', () => {\n\t\t\t\t\t\t\tif (remoteVideo) {\n\t\t\t\t\t\t\t\tremoteVideo.srcObject = null;\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t});\n\n\t\t\t\t\t\tcall.on('error', err => {\n\t\t\t\t\t\t\tconsole.log(\"📹 VIDEO CALL: (caller) \", err);\n\t\t\t\t\t\t});\n\n\t\t\t\t\t }else{\n\t\t\t\t\t\tconsole.log(\"📹 VIDEO CALL: waiting for call\");\n\t\t\t\t\t\tpeer.on('call', call => {\n\t\t\t\t\t\t\tconsole.log(\"📹 VIDEO CALL: received\");\n\t\t\t\t\t\t\tcall.answer(stream);\n\n\t\t\t\t\t\t\tcall.on('stream', callerStream => {\n\t\t\t\t\t\t\t\tif (remoteVideo) {\n\t\t\t\t\t\t\t\t\taddVideoStream(remoteVideo, callerStream);\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t});\n\n\t\t\t\t\t\t\tcall.on('error', err => {\n\t\t\t\t\t\t\t\tconsole.log(\"📹 VIDEO CALL: (receiver) \", err);\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t});\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t}\n\t\t\t\t\n\t\t\t</script>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<div id=\"chat_inner_content\" class=\"py-4 flex gap-2\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if video {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<div class=\"\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -215,17 +273,17 @@ func ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video 
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"flex flex-col h-full flex-grow\"><div id=\"connection_status\"><p>Connecting...</p></div><div id=\"interests_chat\" class=\"flex gap-1 my-1\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<div class=\"flex flex-col h-full flex-grow\"><div id=\"connection_status\"><p>Connecting...</p></div><div id=\"interests_chat\" class=\"flex gap-1 my-1\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if len(interests) > 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<span class=\"text-chatopia-4\">Interests: </span> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "<span class=\"text-chatopia-4\">Interests: </span> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -236,7 +294,7 @@ func ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video 
 				}
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -244,7 +302,7 @@ func ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video 
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "</div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -64,7 +64,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 		}
 
 		clientSessionId := app.session.GetString(r, "clientSessionId")
-		_, exists = app.hub.OnlineClients.GetClient(clientSessionId)
+		_, exists = app.hub.Matchmaker.GetClient(clientSessionId)
 		if !exists {
 			next.ServeHTTP(w, r)
 			return
