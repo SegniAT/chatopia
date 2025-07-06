@@ -25,15 +25,7 @@ func (app *application) ping(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	var isStrict bool
-	var interests []string
-	sessionId := app.session.GetString(r, "clientSessionId")
-	client, ok := app.hub.Matchmaker.GetClient(sessionId)
-	if ok {
-		isStrict = client.IsStrict
-		interests = client.Interests
-	}
-	component := templates.Home("Home", isStrict, interests)
+	component := templates.Home("Home", false, []string{})
 	component.Render(r.Context(), w)
 }
 

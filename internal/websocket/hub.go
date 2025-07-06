@@ -121,7 +121,12 @@ func (h *Hub) handleUnregistration(client *Client) {
 		return
 	}
 
-	h.Matchmaker.RemoveClient(client.SessionID)
+	h.Matchmaker.RemoveClient(client.SessionID) // Queues
+	h.Matchmaker.DeleteClient(client.SessionID) // General all client store
+	h.logger.InfoContext(h.ctx,
+		"client deleted from store",
+		slog.Any("client", client),
+	)
 
 	renderAndSend := func(c *Client, peerID, strangerPeerID uuid.UUID, isClient bool) {
 		buf := bytes.NewBuffer(nil)

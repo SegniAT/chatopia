@@ -201,3 +201,10 @@ func (m *Matchmaker) GetClient(sessionID string) (*Client, bool) {
 	}
 	return val.(*Client), true
 }
+
+func (m *Matchmaker) DeleteClient(sessionID string) {
+	_, ok := m.GetClient(sessionID)
+	if ok {
+		clientStore.Delete(sessionID)
+	}
+}

@@ -123,9 +123,16 @@ templ Home(title string, isStrict bool, interests []string) {
 			return strict_checkbox.checked
 		}
 
+		let setStrictValue = (isChecked) => {
+			const strict_checkbox = document.querySelector("#strict_checkbox")
+			strict_checkbox.checked = isChecked === "true"
+		}
+
 		let updateInterestsLocalStorage=()=>{
 			let interests = getInterestsFromPills()
+			let isStrict = getStrictValue()
 			localStorage.setItem("interests", JSON.stringify(interests))
+			localStorage.setItem("isStrict", isStrict)
 		}
 
 		let loadInterestsFromLocalStorage=()=>{
@@ -142,8 +149,19 @@ templ Home(title string, isStrict bool, interests []string) {
 				return
 			}
 
+			
 			savedInterests.forEach(interest => addInterestPill(interest))
 		}
+
+		let loadIsStrictFromLocalStorage=()=>{
+			let isStrict = localStorage.getItem("isStrict")
+			if (!(isStrict === "false" || isStrict === "true")){
+				return
+			}
+			
+			setStrictValue(isStrict)
+		}
+
 
 		document.addEventListener("DOMContentLoaded",(e)=> {
 			const interestsInput = document.querySelector("#interests_input")
@@ -151,6 +169,9 @@ templ Home(title string, isStrict bool, interests []string) {
 
 			// load previously submitted interests
 			loadInterestsFromLocalStorage(interestsInput)
+
+			// load previously submitted isStrict
+			loadIsStrictFromLocalStorage()
 			
 			// Reinitialize the interests listeners on first load
 			initializeInterests()
@@ -211,7 +232,7 @@ templ Home(title string, isStrict bool, interests []string) {
 				} else {
 					<input id="strict_checkbox" name="strict" type="checkbox"/>
 				}
-				<label for="strict">strict <span class="text-chatopia-4">(atleast 1 common interest)</span></label>
+				<label for="strict_checkbox">strict <span class="text-chatopia-4">(atleast 1 common interest)</span></label>
 			</div>
 			<div id="interest_form">
 				@InterestInput(interests, nil)
