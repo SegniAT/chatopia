@@ -18,4 +18,5 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	golang.org/x/crypto v0.0.0-20200317142112-1b76d66859c6 // indirect
 	golang.org/x/sys v0.32.0 // indirect
+	golang.org/x/time v0.12.0 // indirect
 )

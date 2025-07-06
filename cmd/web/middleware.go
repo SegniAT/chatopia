@@ -3,10 +3,13 @@ package main
 import (
 	"context"
 	"log/slog"
+	"net"
 	"net/http"
+	"sync"
 
 	"github.com/SegniAdebaGodsSon/logger"
 	"github.com/google/uuid"
+	"golang.org/x/time/rate"
 )
 
 func (app *application) addRequestID(next http.Handler) http.Handler {
@@ -36,7 +39,7 @@ func (app *application) recoverPanic(next http.Handler) http.Handler {
 		defer func() {
 			if err := recover(); err != nil {
 				w.Header().Set("Connection", "close")
-				slog.Error("panic", "err", err)
+				slog.ErrorContext(r.Context(), "panic", slog.Any("err", err))
 			}
 		}()
 
@@ -82,6 +85,40 @@ func (app *application) requireAuthentication(next http.Handler) http.Handler {
 			w.WriteHeader(http.StatusSeeOther)
 			return
 		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (app *application) rateLimit(next http.Handler) http.Handler {
+	var (
+		mu      sync.Mutex
+		clients = make(map[string]*rate.Limiter)
+	)
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ip, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err != nil {
+			w.Header().Set("HX-Trigger-After-Settle", `{"showToast": "Couldn't extract your IP address!"}`)
+			w.Header().Set("HX-Redirect", "/")
+			w.WriteHeader(http.StatusSeeOther)
+			return
+		}
+
+		mu.Lock()
+
+		if _, found := clients[ip]; !found {
+			clients[ip] = rate.NewLimiter(2, 5)
+		}
+
+		if !clients[ip].Allow() {
+			mu.Unlock()
+			w.Write([]byte("Rate limit exceeded!"))
+			w.WriteHeader(http.StatusTooManyRequests)
+			return
+		}
+
+		mu.Unlock()
 
 		next.ServeHTTP(w, r)
 	})
