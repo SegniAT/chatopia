@@ -1,8 +1,10 @@
 package templates
 
 templ TextChat() {
-	<div>
-		<div class="flex-grow p-2 my-2 shadow-sm shadow-chatopia-1 rounded-md">
+	<div
+		class="flex-grow flex flex-col"
+	>
+		<div class="flex-grow p-2 my-2 shadow-sm shadow-chatopia-1 rounded-md overflow-scroll">
 			<div id="chat_bubbles" class="flex flex-col gap-1 pb-1"></div>
 			<div id="chat_typing"></div>
 		</div>
@@ -19,25 +21,6 @@ templ TextChat() {
 				></textarea>
 				<button id="send_chat_button" type="button" class="px-2 bg-chatopia-1 text-chatopia-2 rounded-md">Send</button>
 			</form>
-		</div>
-	</div>
-}
-
-templ ChatBubble(message string, self bool) {
-	<div id="chat_bubbles" hx-swap-oob="beforeend">
-		<div class="flex gap-1">
-			if self {
-				<p class="text-blue-500">
-					You:
-				</p>
-			} else {
-				<p class="text-red-500">
-					Stranger:
-				</p>
-			}
-			<p>
-				{ message }
-			</p>
 		</div>
 	</div>
 }

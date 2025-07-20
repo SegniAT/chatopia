@@ -135,7 +135,6 @@ func (h *Hub) handleUnregistration(client *Client) {
 			strangerPeerID,
 			isClient,
 			c.ChatType == "video",
-			c.Interests,
 		).Render(h.ctx, buf)
 
 		c.SendMessage(buf.Bytes())
@@ -166,7 +165,6 @@ func (h *Hub) handleMatchedPair(c1, c2 *Client) {
 			strangerPeerID,
 			isClient,
 			c.ChatType == "video",
-			c.Interests,
 		).Render(h.ctx, buf)
 
 		c.SendMessage(buf.Bytes())
@@ -198,8 +196,6 @@ func (h *Hub) handleMessage(message *Message) {
 
 	message_type := message.Type
 	switch message_type {
-	case "chat_message":
-		h.handleChatMessage(message)
 	case "typing":
 		h.handleTypingMessage(message)
 	case "end_connection":
@@ -207,30 +203,6 @@ func (h *Hub) handleMessage(message *Message) {
 	case "new_connection":
 		h.handleNewCallMessage(message)
 	}
-}
-
-func (h *Hub) handleChatMessage(message *Message) {
-	h.logger.Debug("handleChatMessage called", slog.Any("message", message))
-	client := message.From
-	if client == nil {
-		return
-	}
-
-	partner := message.From.ChatPartner
-	if partner == nil {
-		return
-	}
-
-	clientMessageComponent := templates.ChatBubble(message.ChatMessage, true)
-	partnerMessageComponent := templates.ChatBubble(message.ChatMessage, false)
-
-	html := bytes.NewBuffer(nil)
-	clientMessageComponent.Render(context.Background(), html)
-	client.SendMessage(html.Bytes())
-
-	html = bytes.NewBuffer(nil)
-	partnerMessageComponent.Render(context.Background(), html)
-	partner.SendMessage(html.Bytes())
 }
 
 func (h *Hub) handleTypingMessage(message *Message) {

@@ -4,17 +4,33 @@ import "github.com/google/uuid"
 
 templ Chat(title string, video bool, interests []string) {
 	@Base(title) {
-		<div hx-ext="ws" ws-connect="/chat-ws">
-			@ChatInner(uuid.Nil, uuid.Nil, true, video, interests)
-			<div>
-				@ActionButton_NewChat()
+		<div
+			class="flex-grow flex flex-col"
+			hx-ext="ws"
+			ws-connect="/chat-ws"
+		>
+			<div id="connection_status">
+				<p>Connecting...</p>
 			</div>
+			<div id="interests_chat" class="flex gap-1 my-1">
+				if len(interests) > 0 {
+					<span class="text-chatopia-4">Interests: </span>
+					for _, interest := range interests {
+						@InterestPill(interest)
+					}
+				}
+			</div>
+			@ChatInner(uuid.Nil, uuid.Nil, true, video)
 		</div>
 	}
 }
 
-templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video bool, interests []string) {
-	<div id="chat_inner" hx-swap-oob="outerHTML">
+templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video bool) {
+	<div
+		id="chat_inner"
+		class="flex-grow flex flex-col"
+		hx-swap-oob="outerHTML"
+	>
 		<script>
 			// This function sets up all event handlers for an active connection.
 			// It's called by both the caller and the receiver once the connection is established.
@@ -209,26 +225,19 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 				
 			</script>
 		}
-		<div id="chat_inner_content" class="py-4 flex gap-2">
+		<div
+			id="chat_inner_content"
+			class="flex-grow flex py-4 gap-2"
+		>
 			if video {
 				<div class="">
 					@VideoChat()
 				</div>
 			}
-			<div class="flex flex-col h-full flex-grow">
-				<div id="connection_status">
-					<p>Connecting...</p>
-				</div>
-				<div id="interests_chat" class="flex gap-1 my-1">
-					if len(interests) > 0 {
-						<span class="text-chatopia-4">Interests: </span>
-						for _, interest := range interests {
-							@InterestPill(interest)
-						}
-					}
-				</div>
+			<div class="flex-grow flex flex-col">
 				@TextChat()
 			</div>
 		</div>
+		@ActionButton_NewChat()
 	</div>
 }

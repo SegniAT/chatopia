@@ -29,64 +29,7 @@ func TextChat() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div><div class=\"flex-grow p-2 my-2 shadow-sm shadow-chatopia-1 rounded-md\"><div id=\"chat_bubbles\" class=\"flex flex-col gap-1 pb-1\"></div><div id=\"chat_typing\"></div></div><div><form id=\"chat_form\" class=\"flex items-end gap-2\"><textarea id=\"chat_message\" name=\"chat_message\" class=\"rounded-md text-chatopia-2 p-2 resize\" maxlength=\"150\" ws-send hx-vals='{\"message_type\":\"typing\"}' hx-trigger=\"keyup changed throttle:3s\"></textarea> <button id=\"send_chat_button\" type=\"button\" class=\"px-2 bg-chatopia-1 text-chatopia-2 rounded-md\">Send</button></form></div></div>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		return nil
-	})
-}
-
-func ChatBubble(message string, self bool) templ.Component {
-	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
-			return templ_7745c5c3_CtxErr
-		}
-		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-		if !templ_7745c5c3_IsBuffer {
-			defer func() {
-				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-				if templ_7745c5c3_Err == nil {
-					templ_7745c5c3_Err = templ_7745c5c3_BufErr
-				}
-			}()
-		}
-		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var2 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var2 == nil {
-			templ_7745c5c3_Var2 = templ.NopComponent
-		}
-		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div id=\"chat_bubbles\" hx-swap-oob=\"beforeend\"><div class=\"flex gap-1\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		if self {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<p class=\"text-blue-500\">You:</p>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<p class=\"text-red-500\">Stranger:</p>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<p>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(message)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/text_chat.templ`, Line: 39, Col: 13}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</p></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex-grow flex flex-col\"><div class=\"flex-grow p-2 my-2 shadow-sm shadow-chatopia-1 rounded-md overflow-scroll\"><div id=\"chat_bubbles\" class=\"flex flex-col gap-1 pb-1\"></div><div id=\"chat_typing\"></div></div><div><form id=\"chat_form\" class=\"flex items-end gap-2\"><textarea id=\"chat_message\" name=\"chat_message\" class=\"rounded-md text-chatopia-2 p-2 resize\" maxlength=\"150\" ws-send hx-vals='{\"message_type\":\"typing\"}' hx-trigger=\"keyup changed throttle:3s\"></textarea> <button id=\"send_chat_button\" type=\"button\" class=\"px-2 bg-chatopia-1 text-chatopia-2 rounded-md\">Send</button></form></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
