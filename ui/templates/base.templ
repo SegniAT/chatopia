@@ -28,11 +28,20 @@ templ Base(title string) {
 			</main>
 			This prevents an inherited min-height: min-content from blocking inner flex growth
 		*/
-		<body class="flex flex-col min-h-full bg-chatopia-2 text-chatopia-5 max-w-7xl mx-auto px-8 md:px-12 lg:px-4">
+		<body class="flex flex-col min-h-full bg-chatopia-2 text-chatopia-5 max-w-7xl mx-auto px-2 sm:px-8 md:px-12 lg:px-4">
+			<script>
+				document.body.addEventListener("htmx:wsOpen", (evt) => {
+					window.socketWrapper = evt.detail.socketWrapper;
+				});
+
+				document.body.addEventListener("htmx:wsClose", (evt) => {
+					window.socketWrapper = null;
+				});
+			</script>
 			<header>
 				@Navigation()
 			</header>
-			<main class="grow">
+			<main class="grow flex flex-col min-h-0">
 				{ children... }
 			</main>
 			<footer class="border-t border-chatopia-3/50 py-6 text-sm text-chatopia-5/70 text-center">
@@ -44,17 +53,17 @@ templ Base(title string) {
 
 templ Navigation() {
 	<nav class="text-xl">
-		<ul class="flex items-center justify-between gap-2 border-b border-b-chatopia-3 p-4">
+		<ul class="flex flex-col [@media(min-width:280px)]:flex-row [@media(min-width:280px)]:items-center [@media(min-width:280px)]:justify-between gap-2 border-b border-b-chatopia-3 p-4">
 			<li>
 				<a href="/">
-					<img class="h-8" src="/assets/logo.png"/>
+					<img class="h-5 sm:h-8" src="/assets/logo.png"/>
 				</a>
 			</li>
 			<div class="flex gap-4">
 				<li>
-					//@LiveUsers(0)
+					@LiveUsers(0)
 				</li>
-				<li><a class="hover:text-chatopia-1" href="/about">About</a></li>
+				<li><a class="hover:text-chatopia-1 text-sm sm:text-base" href="/about">About</a></li>
 			</div>
 		</ul>
 	</nav>

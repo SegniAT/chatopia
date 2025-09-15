@@ -29,7 +29,7 @@ func TextChat() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex-grow flex flex-col\"><div class=\"flex-grow p-2 my-2 shadow-sm shadow-chatopia-1 rounded-md overflow-scroll\"><div id=\"chat_bubbles\" class=\"flex flex-col gap-1 pb-1\"></div><div id=\"chat_typing\"></div></div><div><form id=\"chat_form\" class=\"flex items-end gap-2\"><textarea id=\"chat_message\" name=\"chat_message\" class=\"rounded-md text-chatopia-2 p-2 resize\" maxlength=\"150\" ws-send hx-vals='{\"message_type\":\"typing\"}' hx-trigger=\"keyup changed throttle:3s\"></textarea> <button id=\"send_chat_button\" type=\"button\" class=\"px-2 bg-chatopia-1 text-chatopia-2 rounded-md\">Send</button></form></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex-grow flex flex-col\"><div class=\"flex-grow flex flex-col p-2 my-2 shadow-sm shadow-chatopia-1 rounded-md overflow-y-scroll h-[70vh]\"><div id=\"chat_bubbles\" class=\"flex flex-col gap-1 pb-1\"></div><div id=\"chat_typing\"></div></div><div><form id=\"chat_form\" class=\"flex items-end gap-2\"><textarea id=\"chat_message\" name=\"chat_message\" class=\"rounded-md text-chatopia-2 p-2 resize\" maxlength=\"500\" ws-send hx-vals='{\"message_type\":\"typing\"}' hx-trigger=\"keyup changed throttle:3s\"></textarea> <button id=\"send_chat_button\" type=\"button\" class=\"px-2 bg-chatopia-1 text-chatopia-2 rounded-md\">Send</button></form></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

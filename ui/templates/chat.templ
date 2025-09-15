@@ -5,7 +5,7 @@ import "github.com/google/uuid"
 templ Chat(title string, video bool, interests []string) {
 	@Base(title) {
 		<div
-			class="flex-grow flex flex-col"
+			class="flex-1 flex flex-col min-h-0"
 			hx-ext="ws"
 			ws-connect="/chat-ws"
 		>
@@ -28,7 +28,7 @@ templ Chat(title string, video bool, interests []string) {
 templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video bool) {
 	<div
 		id="chat_inner"
-		class="flex-grow flex flex-col"
+		class="grow"
 		hx-swap-oob="outerHTML"
 	>
 		<script>
@@ -73,30 +73,46 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 			}
 
 			function newChatBubble(message, isMe) {
-				const wrapper = document.createElement("div");
-				wrapper.classList.add("flex", "gap-1", "w-full", isMe ? "justify-end" : "justify-start");
+				    const wrapper = document.createElement("div");
+				    wrapper.classList.add("flex", "gap-1", "w-full", isMe ? "justify-end" : "justify-start");
 
-				const innerWrapper = document.createElement("div");
-				if (isMe) {
-					innerWrapper.classList.add("flex", "gap-2", "p-2", "rounded-lg", "max-w-xs", "bg-blue-500", "text-white");
-				} else {
-					innerWrapper.classList.add("flex", "gap-2", "p-2", "rounded-lg", "max-w-xs", "bg-gray-200", "text-gray-800");
+				    const innerWrapper = document.createElement("div");
+				    if (isMe) {
+					innerWrapper.classList.add("flex", "gap-2", "p-2", "rounded-lg", "max-w-xs", "bg-blue-500", "text-white", "min-w-0");
+				    } else {
+					innerWrapper.classList.add("flex", "gap-2", "p-2", "rounded-lg", "max-w-xs", "bg-gray-200", "text-gray-800", "min-w-0");
+				    }
+
+				    const msg = document.createElement("p");
+				    msg.classList.add("break-all", "whitespace-pre-line");
+				    msg.innerText = message;
+
+				    innerWrapper.append(msg);
+				    wrapper.appendChild(innerWrapper);
+
+				    const chatBubbles = document.querySelector("#chat_bubbles");
+				    chatBubbles.appendChild(wrapper);
+				    wrapper.scrollIntoView({ block: "end", behavior: "smooth" });
 				}
 
-				// const who = document.createElement("p");
-				// who.textContent = isMe ? "You:" : "Stranger:";
-				// who.classList.add("font-bold");
+			function wsConnectedToPeerMessage() {
+				const chatSocket = window.socketWrapper;
+				if (chatSocket) {
+					chatSocket.send(JSON.stringify({ message_type: "peer_connected" }));
+					console.log("Sent 'peer_connected' message via WebSocket.");
+				} else {
+					console.error("Socket wrapper not found on window object.");
+				}
+			}
 
-				const msg = document.createElement("p");
-				msg.classList.add("text-wrap", "whitespace-pre-line");
-				msg.innerText = message;
-
-				innerWrapper.append(msg);
-				wrapper.appendChild(innerWrapper);
-
-				const chatBubbles = document.querySelector("#chat_bubbles");
-				chatBubbles.appendChild(wrapper);
-				wrapper.scrollIntoView({ block: "end", behavior: "smooth" });
+			function wsEndConnectionMessage() {
+				const chatSocket = window.socketWrapper;
+				if (chatSocket) {
+					chatSocket.send(JSON.stringify({ message_type: "end_connection" }));
+					console.log("Sent 'end_connection' message via WebSocket.");
+				} else {
+					console.error("Socket wrapper not found on window object.");
+				}
 			}
 		</script>
 		<script>
@@ -111,11 +127,12 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 			// Use a single, persistent peer object. 'var' prevents re-declaration errors from HTMX swaps.
 			if ({{ peerID }} !== {{ uuid.Nil }}) {
 				console.log("Creating new Peer object with ID:", "{{ peerID }}");
+				// TODO: remember to set the debug value to 0/1
 				window.peer = new Peer({{ peerID }}, {
 					//host: "192.168.115.47",
 					//port: 9000,
-					debug: 1,
-					//secure: true,
+					debug: 4,
+					secure: false,
 					config: {
 						'iceServers': [
 							{ urls: "stun:stun.l.google.com:19302" },
@@ -126,6 +143,16 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 
 				window.peer.on('error', err => {
 					console.error('PeerJS error:', err.type, err);
+				});
+
+				window.peer.on('disconnected', () => {
+					console.error('PeerJS disconnected');
+					wsEndConnectionMessage()
+				});
+
+				window.peer.on('close', () => {
+					console.error('PeerJS closed');
+					wsEndConnectionMessage()
 				});
 
 				window.peer.on('open', id => {
@@ -142,10 +169,8 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 							conn = window.peer.connect({{ strangerPeerID }});
 
 							conn.on('error', err => console.error('Connection error (caller):', err));
-							
-							// The 'open' event signals a successful connection for the caller.
 							conn.on('open', () => {
-								console.log("Successfull call: ", conn)
+								wsConnectedToPeerMessage()
 								setupChat(conn);
 							});
 
@@ -153,10 +178,14 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 							console.log("Acting as RECEIVER. Waiting for connection...");
 
 							window.peer.on('connection', (connection) => {
-								console.log("Incoming connection received.", connection);
+								console.log("Incoming connection received.");
 								conn = connection;
+
 								conn.on('error', err => console.error('Connection error (receiver):', err));
-								setupChat(conn);
+								 conn.on('open', () => {
+									wsConnectedToPeerMessage()
+									setupChat(conn);
+								});
 							});
 						}
 					}
@@ -227,7 +256,7 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 		}
 		<div
 			id="chat_inner_content"
-			class="flex-grow flex py-4 gap-2"
+			class="h-full flex py-4 gap-2"
 		>
 			if video {
 				<div class="">

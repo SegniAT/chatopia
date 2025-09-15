@@ -45,7 +45,7 @@ func Home(title string, isStrict bool, interests []string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"pb-10 pt-20 flex flex-col lg:flex-row justify-between items-center\"><div class=\"lg:order-2\"><img class=\"w-full md:max-w-lg \" src=\"/assets/logo.png\" alt=\"chatopia logo\"></div><div class=\"lg:order-1\"><h1 class=\"text-4xl lg:text-5xl py-20 font-thin\">Looking for love (or just a good laugh)? Get on <span class=\"text-chatopia-1 font-bold\">Chatopia</span>, Ethiopia's answer to boredom! </h1></div></div><div><p class=\"\">Start chatting:</p><div class=\"flex justify-start gap-2 p-2\"><form id=\"video_chat_form\" hx-post=\"/chat/video\" hx-target=\"#interest_form\" hx-vals='js:{\n\t\t\t\t\t\t\"interests[]\": getInterestsFromPills(),\n\t\t\t\t\t\t\"isStrict\": getStrictValue()\n\t\t\t\t\t}'><button class=\"rounded-md border-2 border-chatopia-1 bg-chatopia-2 text-chatopia-1 py-1 px-4 font-semibold\" type=\"submit\">Video</button></form><form id=\"text_chat_form\" hx-post=\"/chat/text\" hx-target=\"#interest_form\" hx-vals='js:{\n\t\t\t\t\t\t\"interests[]\": getInterestsFromPills(),\n\t\t\t\t\t\t\"isStrict\": getStrictValue()\n\t\t\t\t\t}'><button class=\"rounded-md border-2 border-chatopia-3 bg-chatopia-3 text-chatopia-5 py-1 px-5 font-semibold\" type=\"submit\">Text</button></form></div><div class=\"py-2 flex items-center gap-1\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"py-7 sm:py-10 flex flex-col lg:flex-row justify-between items-center relative bg-chatopia-2\"><div class=\"lg:order-2\"><img class=\"hidden sm:block w-40 lg:w-80\" src=\"/assets/hero.webp\" alt=\"chatopia logo\"></div><div class=\"lg:order-1\"><h1 class=\"text-3xl sm:text-4xl lg:text-5xl sm:py-5 font-thin text-center sm:text-left\">Looking for love (or just a good laugh)? Get on <span class=\"text-chatopia-1 font-bold\">Chatopia</span>, Ethiopia's answer to boredom!</h1></div></div><div class=\"text-sm sm:text-base\"><p>Start chatting:</p><div class=\"flex justify-start gap-2 p-2\"><form id=\"video_chat_form\" hx-post=\"/chat/video\" hx-target=\"#interest_form\" hx-vals='js:{\n\t\t\t\t\t\t\"interests[]\": getInterestsFromPills(),\n\t\t\t\t\t\t\"isStrict\": getStrictValue()\n\t\t\t\t\t}'><button class=\"rounded-md border-2 border-chatopia-1 bg-chatopia-2 text-chatopia-1 py-1 px-4 font-semibold\" type=\"submit\">Video</button></form><form id=\"text_chat_form\" hx-post=\"/chat/text\" hx-target=\"#interest_form\" hx-vals='js:{\n\t\t\t\t\t\t\"interests[]\": getInterestsFromPills(),\n\t\t\t\t\t\t\"isStrict\": getStrictValue()\n\t\t\t\t\t}'><button class=\"rounded-md border-2 border-chatopia-3 bg-chatopia-3 text-chatopia-5 py-1 px-5 font-semibold\" type=\"submit\">Text</button></form></div><div class=\"py-2 flex items-center gap-1\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -115,7 +115,7 @@ func InterestInput(interests []string, interestsError error) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(interest)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/home.templ`, Line: 250, Col: 15}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/home.templ`, Line: 258, Col: 15}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -134,7 +134,7 @@ func InterestInput(interests []string, interestsError error) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(interestsError.Error())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/home.templ`, Line: 258, Col: 28}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/home.templ`, Line: 266, Col: 28}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {

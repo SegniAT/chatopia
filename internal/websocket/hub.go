@@ -174,10 +174,10 @@ func (h *Hub) handleMatchedPair(c1, c2 *Client) {
 	renderAndSend(c2, peer2, peer1, false)
 
 	// Send status updates
-	c1.SendMessage(HtmlTemplates.ConnectionStatusConnected.Bytes())
-	c2.SendMessage(HtmlTemplates.ConnectionStatusConnected.Bytes())
-	c1.SendMessage(HtmlTemplates.ActionBtnNew.Bytes())
-	c2.SendMessage(HtmlTemplates.ActionBtnNew.Bytes())
+	c1.SendMessage(HtmlTemplates.ConnectionStatusMatchFoundConnecting.Bytes())
+	c1.SendMessage(HtmlTemplates.ActionBtnConnecting.Bytes())
+	c2.SendMessage(HtmlTemplates.ConnectionStatusMatchFoundConnecting.Bytes())
+	c2.SendMessage(HtmlTemplates.ActionBtnConnecting.Bytes())
 }
 
 func (h *Hub) handleMatchTimeout(client *Client) {
@@ -198,6 +198,8 @@ func (h *Hub) handleMessage(message *Message) {
 	switch message_type {
 	case "typing":
 		h.handleTypingMessage(message)
+	case "peer_connected":
+		h.handlePeerConnected(message)
 	case "end_connection":
 		h.handleEndCallMessage(message)
 	case "new_connection":
@@ -206,7 +208,6 @@ func (h *Hub) handleMessage(message *Message) {
 }
 
 func (h *Hub) handleTypingMessage(message *Message) {
-	h.logger.Debug("handleTypingMessage called", slog.Any("message", message))
 	client := message.From
 	if client == nil {
 		return
@@ -217,11 +218,25 @@ func (h *Hub) handleTypingMessage(message *Message) {
 		return
 	}
 	partner.SendMessage(HtmlTemplates.StrangerTyping.Bytes())
+}
 
+func (h *Hub) handlePeerConnected(message *Message) {
+	client := message.From
+	if client == nil {
+		return
+	}
+
+	client.SendMessage(HtmlTemplates.ConnectionStatusConnected.Bytes())
+	client.SendMessage(HtmlTemplates.ActionBtnNew.Bytes())
+
+	partner := message.From.ChatPartner
+	if partner == nil {
+		partner.SendMessage(HtmlTemplates.ConnectionStatusConnected.Bytes())
+		partner.SendMessage(HtmlTemplates.ActionBtnNew.Bytes())
+	}
 }
 
 func (h *Hub) handleNewCallMessage(message *Message) {
-	h.logger.Debug("handleNewCallMessage called", slog.Any("message", message))
 	client := message.From
 	if client == nil {
 		return
@@ -241,7 +256,6 @@ func (h *Hub) handleNewCallMessage(message *Message) {
 }
 
 func (h *Hub) handleEndCallMessage(message *Message) {
-	h.logger.Debug("handleEndCallMessage called", slog.Any("message", message))
 	client := message.From
 	if client == nil {
 		return
@@ -256,16 +270,18 @@ func (h *Hub) handleEndCallMessage(message *Message) {
 }
 
 type preloadedTemplates struct {
-	ConnectionStatusReady          *bytes.Buffer
-	ConnectionStatusSearching      *bytes.Buffer
-	ConnectionStatusConnected      *bytes.Buffer
-	ConnectionStatusDisconnected   *bytes.Buffer
-	ConnectionStatusNoClientsFound *bytes.Buffer
-	StrangerTyping                 *bytes.Buffer
-	ActionBtnNew                   *bytes.Buffer
-	ActionBtnSearching             *bytes.Buffer
-	ClientChatBubble               *bytes.Buffer
-	PartnerChatBubble              *bytes.Buffer
+	ConnectionStatusReady                *bytes.Buffer
+	ConnectionStatusSearching            *bytes.Buffer
+	ConnectionStatusMatchFoundConnecting *bytes.Buffer
+	ConnectionStatusConnected            *bytes.Buffer
+	ConnectionStatusDisconnected         *bytes.Buffer
+	ConnectionStatusNoClientsFound       *bytes.Buffer
+	StrangerTyping                       *bytes.Buffer
+	ActionBtnNew                         *bytes.Buffer
+	ActionBtnSearching                   *bytes.Buffer
+	ActionBtnConnecting                  *bytes.Buffer
+	ClientChatBubble                     *bytes.Buffer
+	PartnerChatBubble                    *bytes.Buffer
 }
 
 func renderTemplate(templateFunc templ.Component) *bytes.Buffer {
@@ -276,13 +292,15 @@ func renderTemplate(templateFunc templ.Component) *bytes.Buffer {
 
 func preloadTemplates() *preloadedTemplates {
 	return &preloadedTemplates{
-		ConnectionStatusReady:          renderTemplate(templates.ConnectionStatusReady()),
-		ConnectionStatusSearching:      renderTemplate(templates.ConnectionStatusSearching()),
-		ConnectionStatusConnected:      renderTemplate(templates.ConnectionStatusConnected()),
-		ConnectionStatusDisconnected:   renderTemplate(templates.ConnectionStatusDisconnected()),
-		ConnectionStatusNoClientsFound: renderTemplate(templates.ConnectionStatusNoClientsFound()),
-		StrangerTyping:                 renderTemplate(templates.StrangerTyping()),
-		ActionBtnNew:                   renderTemplate(templates.ActionButton_NewChat()),
-		ActionBtnSearching:             renderTemplate(templates.ActionButton_Searching()),
+		ConnectionStatusReady:                renderTemplate(templates.ConnectionStatusReady()),
+		ConnectionStatusSearching:            renderTemplate(templates.ConnectionStatusSearching()),
+		ConnectionStatusMatchFoundConnecting: renderTemplate(templates.ConnectionStatusMatchFoundConnecting()),
+		ConnectionStatusConnected:            renderTemplate(templates.ConnectionStatusConnected()),
+		ConnectionStatusDisconnected:         renderTemplate(templates.ConnectionStatusDisconnected()),
+		ConnectionStatusNoClientsFound:       renderTemplate(templates.ConnectionStatusNoClientsFound()),
+		StrangerTyping:                       renderTemplate(templates.StrangerTyping()),
+		ActionBtnNew:                         renderTemplate(templates.ActionButton_NewChat()),
+		ActionBtnSearching:                   renderTemplate(templates.ActionButton_Searching()),
+		ActionBtnConnecting:                  renderTemplate(templates.ActionButton_Connecting()),
 	}
 }

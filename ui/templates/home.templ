@@ -192,7 +192,7 @@ templ Home(title string, isStrict bool, interests []string) {
 
 	</script>
 	@Base(title) {
-		<div class="pb-10 pt-20 flex flex-col lg:flex-row justify-between items-center relative bg-chatopia-2">
+		<div class="py-7 sm:py-10 flex flex-col lg:flex-row justify-between items-center relative bg-chatopia-2">
 			<div class="lg:order-2">
 				<img
 					class="hidden sm:block w-40 lg:w-80"
@@ -201,15 +201,15 @@ templ Home(title string, isStrict bool, interests []string) {
 				/>
 			</div>
 			<div class="lg:order-1">
-				<h1 class="text-4xl lg:text-5xl py-20 font-thin">
+				<h1 class="text-3xl sm:text-4xl lg:text-5xl sm:py-5 font-thin text-center sm:text-left">
 					Looking for love (or just a good laugh)? Get on
 					<span class="text-chatopia-1 font-bold">Chatopia</span>,
 					Ethiopia's answer to boredom!
 				</h1>
 			</div>
 		</div>
-		<div>
-			<p class="">Start chatting:</p>
+		<div class="text-sm sm:text-base">
+			<p>Start chatting:</p>
 			<div class="flex justify-start gap-2 p-2">
 				<form
 					id="video_chat_form"

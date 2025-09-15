@@ -68,7 +68,7 @@ func ConnectionStatusSearching() templ.Component {
 	})
 }
 
-func ConnectionStatusConnected() templ.Component {
+func ConnectionStatusMatchFoundConnecting() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -89,7 +89,36 @@ func ConnectionStatusConnected() templ.Component {
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div id=\"connection_status\" hx-swap-oob=\"true\"><p class=\"text-green-500\">Connected with stranger 🤝</p></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div id=\"connection_status\" hx-swap-oob=\"true\"><p class=\"text-yellow-500\">Match found, connecting... 🛜</p></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func ConnectionStatusConnected() templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var4 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var4 == nil {
+			templ_7745c5c3_Var4 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div id=\"connection_status\" hx-swap-oob=\"true\"><p class=\"text-green-500\">Connected with stranger 🤝</p></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -113,12 +142,12 @@ func ConnectionStatusDisconnected() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var4 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var4 == nil {
-			templ_7745c5c3_Var4 = templ.NopComponent
+		templ_7745c5c3_Var5 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var5 == nil {
+			templ_7745c5c3_Var5 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div id=\"connection_status\" hx-swap-oob=\"true\"><p class=\"text-red-500\">Stranger disconnected 🏃</p></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div id=\"connection_status\" hx-swap-oob=\"true\"><p class=\"text-red-500\">Stranger disconnected 🏃</p></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -142,12 +171,12 @@ func ConnectionStatusNoClientsFound() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var5 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var5 == nil {
-			templ_7745c5c3_Var5 = templ.NopComponent
+		templ_7745c5c3_Var6 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var6 == nil {
+			templ_7745c5c3_Var6 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div id=\"connection_status\" hx-swap-oob=\"true\"><p class=\"text-red-500\">Can't find a stranger 😢</p></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div id=\"connection_status\" hx-swap-oob=\"true\"><p class=\"text-red-500\">Can't find a stranger 😢</p></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -171,12 +200,12 @@ func StrangerTyping() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var6 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var6 == nil {
-			templ_7745c5c3_Var6 = templ.NopComponent
+		templ_7745c5c3_Var7 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var7 == nil {
+			templ_7745c5c3_Var7 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div id=\"chat_typing\" hx-swap-oob=\"true\" hx-on:htmx:load=\"clearTimeout(window.typingTimer); window.typingTimer = window.setTimeout(function() { htmx.find('#chat_typing').innerHTML = ''}, 3000)\" class=\"flex items-center gap-1 py-1\"><p class=\"text-red-500\">Stranger:</p><img src=\"/assets/typing.gif\" height=\"60\"></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div id=\"chat_typing\" hx-swap-oob=\"true\" hx-on:htmx:load=\"clearTimeout(window.typingTimer); window.typingTimer = window.setTimeout(function() { htmx.find('#chat_typing').innerHTML = ''}, 3000)\" class=\"flex items-center gap-1 py-1\"><p class=\"text-red-500\">Stranger:</p><img src=\"/assets/typing.gif\" height=\"60\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -200,12 +229,12 @@ func ActionButton_NewChat() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var7 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var7 == nil {
-			templ_7745c5c3_Var7 = templ.NopComponent
+		templ_7745c5c3_Var8 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var8 == nil {
+			templ_7745c5c3_Var8 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div id=\"action_button_container\"><button id=\"action_button\" class=\"border bg-chatopia-1 border-chatopia-3 text-chatopia-2 p-2 font-semibold\" type=\"button\" ws-send hx-vals='{\"message_type\":\"new_connection\"}' hx-trigger=\"click\">New Chat</button></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<div id=\"action_button_container\"><button id=\"action_button\" class=\"border bg-chatopia-1 border-chatopia-3 text-chatopia-2 p-2 font-semibold\" type=\"button\" ws-send hx-vals='{\"message_type\":\"new_connection\"}' hx-trigger=\"click\">New Chat</button></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -229,12 +258,41 @@ func ActionButton_Searching() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var8 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var8 == nil {
-			templ_7745c5c3_Var8 = templ.NopComponent
+		templ_7745c5c3_Var9 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var9 == nil {
+			templ_7745c5c3_Var9 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<div id=\"action_button_container\"><button id=\"action_button\" class=\"flex gap-1 border border-chatopia-1 p-2 bg-chatopia-4\" disabled type=\"button\"><svg class=\"text-chatopia-1\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><style>.spinner_DupU{animation:spinner_sM3D 1.2s infinite}.spinner_GWtZ{animation-delay:.1s}.spinner_dwN6{animation-delay:.2s}.spinner_46QP{animation-delay:.3s}.spinner_PD82{animation-delay:.4s}.spinner_eUgh{animation-delay:.5s}.spinner_eUaP{animation-delay:.6s}.spinner_j38H{animation-delay:.7s}.spinner_tVmX{animation-delay:.8s}.spinner_DQhX{animation-delay:.9s}.spinner_GIL4{animation-delay:1s}.spinner_n0Yb{animation-delay:1.1s}@keyframes spinner_sM3D{0%,50%{animation-timing-function:cubic-bezier(0,1,0,1);r:0}10%{animation-timing-function:cubic-bezier(.53,0,.61,.73);r:2px}}</style><circle class=\"spinner_DupU\" cx=\"12\" cy=\"3\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_GWtZ\" cx=\"16.50\" cy=\"4.21\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_n0Yb\" cx=\"7.50\" cy=\"4.21\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_dwN6\" cx=\"19.79\" cy=\"7.50\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_GIL4\" cx=\"4.21\" cy=\"7.50\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_46QP\" cx=\"21.00\" cy=\"12.00\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_DQhX\" cx=\"3.00\" cy=\"12.00\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_PD82\" cx=\"19.79\" cy=\"16.50\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_tVmX\" cx=\"4.21\" cy=\"16.50\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_eUgh\" cx=\"16.50\" cy=\"19.79\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_j38H\" cx=\"7.50\" cy=\"19.79\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_eUaP\" cx=\"12\" cy=\"21\" r=\"0\" fill=\"currentColor\"></circle></svg> <span>Searching...</span></button></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<div id=\"action_button_container\"><button id=\"action_button\" class=\"flex gap-1 border border-chatopia-1 p-2 bg-chatopia-4\" disabled type=\"button\"><svg class=\"text-chatopia-1\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><style>.spinner_DupU{animation:spinner_sM3D 1.2s infinite}.spinner_GWtZ{animation-delay:.1s}.spinner_dwN6{animation-delay:.2s}.spinner_46QP{animation-delay:.3s}.spinner_PD82{animation-delay:.4s}.spinner_eUgh{animation-delay:.5s}.spinner_eUaP{animation-delay:.6s}.spinner_j38H{animation-delay:.7s}.spinner_tVmX{animation-delay:.8s}.spinner_DQhX{animation-delay:.9s}.spinner_GIL4{animation-delay:1s}.spinner_n0Yb{animation-delay:1.1s}@keyframes spinner_sM3D{0%,50%{animation-timing-function:cubic-bezier(0,1,0,1);r:0}10%{animation-timing-function:cubic-bezier(.53,0,.61,.73);r:2px}}</style><circle class=\"spinner_DupU\" cx=\"12\" cy=\"3\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_GWtZ\" cx=\"16.50\" cy=\"4.21\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_n0Yb\" cx=\"7.50\" cy=\"4.21\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_dwN6\" cx=\"19.79\" cy=\"7.50\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_GIL4\" cx=\"4.21\" cy=\"7.50\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_46QP\" cx=\"21.00\" cy=\"12.00\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_DQhX\" cx=\"3.00\" cy=\"12.00\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_PD82\" cx=\"19.79\" cy=\"16.50\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_tVmX\" cx=\"4.21\" cy=\"16.50\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_eUgh\" cx=\"16.50\" cy=\"19.79\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_j38H\" cx=\"7.50\" cy=\"19.79\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_eUaP\" cx=\"12\" cy=\"21\" r=\"0\" fill=\"currentColor\"></circle></svg> <span>Searching...</span></button></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func ActionButton_Connecting() templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var10 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var10 == nil {
+			templ_7745c5c3_Var10 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<div id=\"action_button_container\"><button id=\"action_button\" class=\"flex gap-1 border border-chatopia-1 p-2 bg-chatopia-4\" disabled type=\"button\"><svg class=\"text-chatopia-1\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><style>.spinner_DupU{animation:spinner_sM3D 1.2s infinite}.spinner_GWtZ{animation-delay:.1s}.spinner_dwN6{animation-delay:.2s}.spinner_46QP{animation-delay:.3s}.spinner_PD82{animation-delay:.4s}.spinner_eUgh{animation-delay:.5s}.spinner_eUaP{animation-delay:.6s}.spinner_j38H{animation-delay:.7s}.spinner_tVmX{animation-delay:.8s}.spinner_DQhX{animation-delay:.9s}.spinner_GIL4{animation-delay:1s}.spinner_n0Yb{animation-delay:1.1s}@keyframes spinner_sM3D{0%,50%{animation-timing-function:cubic-bezier(0,1,0,1);r:0}10%{animation-timing-function:cubic-bezier(.53,0,.61,.73);r:2px}}</style><circle class=\"spinner_DupU\" cx=\"12\" cy=\"3\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_GWtZ\" cx=\"16.50\" cy=\"4.21\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_n0Yb\" cx=\"7.50\" cy=\"4.21\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_dwN6\" cx=\"19.79\" cy=\"7.50\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_GIL4\" cx=\"4.21\" cy=\"7.50\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_46QP\" cx=\"21.00\" cy=\"12.00\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_DQhX\" cx=\"3.00\" cy=\"12.00\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_PD82\" cx=\"19.79\" cy=\"16.50\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_tVmX\" cx=\"4.21\" cy=\"16.50\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_eUgh\" cx=\"16.50\" cy=\"19.79\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_j38H\" cx=\"7.50\" cy=\"19.79\" r=\"0\" fill=\"currentColor\"></circle> <circle class=\"spinner_DupU spinner_eUaP\" cx=\"12\" cy=\"21\" r=\"0\" fill=\"currentColor\"></circle></svg> <span>Connecting...</span></button></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -258,25 +316,25 @@ func InterestPill(interest string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var9 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var9 == nil {
-			templ_7745c5c3_Var9 = templ.NopComponent
+		templ_7745c5c3_Var11 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var11 == nil {
+			templ_7745c5c3_Var11 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<div class=\"flex justify-center items-center px-2 h-6 bg-chatopia-2 border-l border-chatopia-3 shadow-sm shadow-chatopia-3 rounded-md\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<div class=\"flex justify-center items-center px-2 h-6 bg-chatopia-2 border-l border-chatopia-3 shadow-sm shadow-chatopia-3 rounded-md\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var10 string
-		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(interest)
+		var templ_7745c5c3_Var12 string
+		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(interest)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/components.templ`, Line: 94, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/components.templ`, Line: 128, Col: 12}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -300,25 +358,25 @@ func LiveUsers(users int) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var11 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var11 == nil {
-			templ_7745c5c3_Var11 = templ.NopComponent
+		templ_7745c5c3_Var13 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var13 == nil {
+			templ_7745c5c3_Var13 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<div id=\"live_users\" class=\"relative flex items-center gap-1 text-2xl bg-chatopia-3 px-2 py-1 rounded-sm\" hx-get=\"/live_users\" hx-trigger=\"every 10s\" hx-swap-oob=\"true\"><!-- Dot positioned inside top-left of the div --><span class=\"absolute top-0 left-0 mt-1 ml-1 flex h-3 w-3\"><span class=\"animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75\"></span> <span class=\"relative inline-flex rounded-full h-3 w-3 bg-red-500\"></span></span><!-- User count and \"live\" text --><div class=\"flex items-center gap-1 ml-3\"><span class=\"text-lg font-semibold\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div id=\"live_users\" class=\"relative flex items-center gap-1 text-base sm:text-2xl bg-chatopia-3/90 px-2 py-1 rounded-sm\" hx-get=\"/live_users\" hx-trigger=\"every 10s\" hx-swap-oob=\"true\"><!-- Dot positioned inside top-left of the div --><span class=\"absolute top-0 left-0 mt-1 ml-1 flex h-2 w-2 sm:h-3 sm:w-3\"><span class=\"animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75\"></span> <span class=\"relative inline-flex rounded-full h-2 w-2 sm:h-3 sm:w-3 bg-red-500\"></span></span><!-- User count and \"live\" text --><div class=\"flex items-center gap-1 ml-3\"><span class=\"text-base sm:text-lg font-semibold\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var12 string
-		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", users))
+		var templ_7745c5c3_Var14 string
+		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", users))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/components.templ`, Line: 113, Col: 65}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/components.templ`, Line: 147, Col: 78}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</span></div><span class=\"text-sm text-chatopia-1\">live</span></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</span></div><span class=\"text-sm text-chatopia-1\">live</span></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
