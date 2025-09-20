@@ -1,3 +1,28 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Apply to scrollable div */
+.scrollbar-chatopia::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollbar-chatopia::-webkit-scrollbar-track {
+  background: #01161E; /* chatopia-2 */
+  border-radius: 4px;
+}
+
+.scrollbar-chatopia::-webkit-scrollbar-thumb {
+  background-color: #20B43C; /* chatopia-1 */
+  border-radius: 4px;
+}
+
+.scrollbar-chatopia::-webkit-scrollbar-thumb:hover {
+  background-color: #124559; /* chatopia-3, darker hover */
+}
+
+/* Firefox */
+.scrollbar-chatopia {
+  scrollbar-width: thin;
+  scrollbar-color: #20B43C #01161E; /* thumb, track */
+}

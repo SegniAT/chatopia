@@ -74,7 +74,7 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 
 			function newChatBubble(message, isMe) {
 				    const wrapper = document.createElement("div");
-				    wrapper.classList.add("flex", "gap-1", "w-full", isMe ? "justify-end" : "justify-start");
+				    wrapper.classList.add("flex", "gap-1", "w-full", "text-sm", "sm:text-base", isMe ? "justify-end" : "justify-start");
 
 				    const innerWrapper = document.createElement("div");
 				    if (isMe) {
@@ -93,7 +93,7 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 				    const chatBubbles = document.querySelector("#chat_bubbles");
 				    chatBubbles.appendChild(wrapper);
 				    wrapper.scrollIntoView({ block: "end", behavior: "smooth" });
-				}
+			}
 
 			function wsConnectedToPeerMessage() {
 				const chatSocket = window.socketWrapper;
@@ -131,7 +131,7 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 				window.peer = new Peer({{ peerID }}, {
 					//host: "192.168.115.47",
 					//port: 9000,
-					debug: 4,
+					debug: 1,
 					secure: false,
 					config: {
 						'iceServers': [
@@ -163,6 +163,7 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 						const isCaller = {{ isCaller }};
 						var conn = null;
 			
+						// Setup text comm
 						if (isCaller) {
 							console.debug("Acting as CALLER. Connecting to:", "{{ strangerPeerID }}");
 
@@ -188,82 +189,92 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 								});
 							});
 						}
-					}
-				})
-			}
+
+						// Setup video comm
+						if ({{ video }}) {
+							function addVideoStream (videoElement, stream){
+								videoElement.srcObject = stream
+								videoElement.style.transform = 'scaleX(-1)';
+								videoElement.addEventListener('loadedmetadata', () => {
+									videoElement.play();
+								});
+							}
+
+							const localVideo= document.querySelector("#local_video");
+							const remoteVideo= document.querySelector("#remote_video");
+
+							if (isCaller){
+								navigator.mediaDevices.getUserMedia({
+									video: true,
+									audio: true
+								}).then(stream => {
+									addVideoStream(localVideo, stream);
+
+									console.log("📹 VIDEO CALL: initiated");
+									const call = window.peer.call({{ strangerPeerID }}, stream);
+
+									call.on('stream', partnerStream => {
+										console.log("📹 VIDEO CALL: (caller) stream partnerStream accepted.");
+										if (remoteVideo) {
+											addVideoStream(remoteVideo, partnerStream);
+										}
+									})
+
+									call.on('close', () => {
+										if (remoteVideo) {
+											remoteVideo.srcObject = null;
+										}
+									});
+
+									call.on('error', err => {
+										console.error("📹 VIDEO CALL: (caller) ", err);
+									});
+								}).catch(err => {
+									console.error("Failed to get local stream:", err);
+								});
+							}else{
+								let localStream = null;
+								navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+									.then(stream => {
+										localStream = stream;
+										addVideoStream(localVideo, stream);
+									}).catch(err => {
+										console.error("Failed to get local stream for receiver:", err);
+									});
+
+								console.log("📹 VIDEO CALL: waiting for call");
+								window.peer.on('call', call => {
+									console.log("📹 VIDEO CALL: received");
+
+									if (localStream) {
+										call.answer(localStream);
+
+										call.on('stream', callerStream => {
+											if (remoteVideo) {
+												addVideoStream(remoteVideo, callerStream);
+											}
+										});
+
+										call.on('error', err => {
+											console.log("📹 VIDEO CALL: (receiver) ", err);
+										});
+									} else {
+										console.error("Call received, but local stream is not available to answer with.");
+									}
+								});
+							} // Callee logic
+						} // Setup video comm
+					} // Stranger ID existence/validity check
+				}) // Peer on 'open' event
+			} // Peer ID existence/validity check
 		</script>
-		if video {
-			<script>
-				function addVideoStream (videoElement, stream){
-					videoElement.srcObject = stream
-					videoElement.style.transform = 'scaleX(-1)';
-					videoElement.addEventListener('loadedmetadata', () => {
-						videoElement.play();
-					});
-				}
-
-			if ({{ peerID }} !== {{ uuid.Nil }} && window.peer && navigator) {
-				navigator.mediaDevices.getUserMedia({
-					video: true,
-					audio: true
-				}).then(stream => {
-					const isCaller = {{ isCaller }};
-					const localVideo= document.querySelector("#local_video");
-					const remoteVideo= document.querySelector("#remote_video");
-
-					addVideoStream(localVideo, stream);
-					
-					 if (isCaller){
-						console.log("📹 VIDEO CALL: initiated");
-					 	const call = window.peer.call({{ strangerPeerID }}, stream);
-						call.on('stream', partnerStream => {
-							console.log("📹 VIDEO CALL: (caller) stream partnerStream accepted ", partnerStream);
-							if (remoteVideo) {
-								addVideoStream(remoteVideo, partnerStream);
-							}
-						})
-						call.on('close', () => {
-							if (remoteVideo) {
-								remoteVideo.srcObject = null;
-							}
-						});
-
-						call.on('error', err => {
-							console.log("📹 VIDEO CALL: (caller) ", err);
-						});
-
-					 }else{
-						console.log("📹 VIDEO CALL: waiting for call");
-						peer.on('call', call => {
-							console.log("📹 VIDEO CALL: received");
-							call.answer(stream);
-
-							call.on('stream', callerStream => {
-								if (remoteVideo) {
-									addVideoStream(remoteVideo, callerStream);
-								}
-							});
-
-							call.on('error', err => {
-								console.log("📹 VIDEO CALL: (receiver) ", err);
-							});
-						});
-					}
-				});
-			}
-				
-			</script>
-		}
-		<div
-			id="chat_inner_content"
-			class="h-full flex py-4 gap-2"
-		>
+		<div class="flex flex-col sm:flex-row py-4 gap-2">
 			if video {
 				<div class="">
 					@VideoChat()
 				</div>
 			}
-			<div class="flex-grow flex flex-col">
+			<div class="flex-grow">
 				@TextChat()
 			</div>
 		</div>

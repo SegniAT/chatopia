@@ -29,7 +29,7 @@ func VideoChat() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<script>\n\t</script><div class=\"flex flex-col gap-2\"><div><video id=\"remote_video\" class=\"h-80 w-80 border-2 rounded-md border-chatopia-3\" autoplay muted></video></div><div><video id=\"local_video\" class=\"h-80 w-80 border-2 rounded-md border-chatopia-3\" autoplay muted></video></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<script>\n\t</script><div class=\"flex justify-center sm:flex-col gap-2\"><div><video id=\"remote_video\" class=\"h-50 w-50 sm:h-80 sm:w-80 border-2 rounded-md border-chatopia-3\" autoplay muted></video></div><div><video id=\"local_video\" class=\"h-50 w-50 sm:h-80 sm:w-80 border-2 rounded-md border-chatopia-3\" autoplay muted></video></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
