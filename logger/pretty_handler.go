@@ -36,7 +36,7 @@ func (h *PrettyHandler) Handle(ctx context.Context, r slog.Record) error {
 	}
 
 	// format the attributes
-	fields := make(map[string]interface{}, r.NumAttrs())
+	fields := make(map[string]any, r.NumAttrs())
 
 	r.Attrs(func(a slog.Attr) bool {
 		fields[a.Key] = a.Value.Any()

@@ -1,8 +1,11 @@
 package main
 
 import (
-	"github.com/justinas/alice"
+	"io/fs"
 	"net/http"
+
+	assets "github.com/SegniAdebaGodsSon"
+	"github.com/justinas/alice"
 )
 
 func (app *application) routes() http.Handler {
@@ -22,7 +25,12 @@ func (app *application) routes() http.Handler {
 		app.ServeWs(w, r)
 	})))
 
-	mux.Handle("GET /assets/", http.StripPrefix("/assets", http.FileServer(http.Dir("./public/assets"))))
+	assetsFS, err := fs.Sub(assets.PublicContent, "public/assets")
+	if err != nil {
+		panic(err)
+	}
+
+	mux.Handle("GET /assets/", http.StripPrefix("/assets", http.FileServer(http.FS(assetsFS))))
 
 	mux.Handle("GET /ping", standardMiddleware.ThenFunc(app.ping))
 
