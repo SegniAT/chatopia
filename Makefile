@@ -1,5 +1,5 @@
-# Include variables from the .envrc file
-include .envrc
+# Include variables from .env file
+include .env
 
 # ==================================================================================== #
 # HELPERS
@@ -24,19 +24,19 @@ confirm:
 ## run/web: run the cmd/web application
 .PHONY: run/web
 run/web:
-	go run ./cmd/web -port=${PORT}
+	go run ./cmd/web -port=${APP_PORT}
 
 ## live/templ: run templ generation in watch mode to detect all .templ files and re-create _templ.txt files on change, then send reload event to browser
 .PHONY: live/templ
 live/templ:
-	~/go/bin/templ generate --watch --proxy="http://localhost:${PORT}" -v
+	~/go/bin/templ generate --watch --proxy="http://localhost:${APP_PORT}" -v
 
 ## live/server: run air to detect any go file changes to re-build and re-run the server.
 .PHONY: live/server
 live/server:
 	~/go/bin/air \
 	--build.cmd "go build -o tmp/bin/main ./cmd/web/" --build.bin "tmp/bin/main" --build.delay "100" \
-	--build.args_bin "-port ${PORT} -secret ${SECRET} -env ${ENV}" \
+	--build.args_bin "-port ${APP_PORT} -secret ${SESSION_SECRET} -env ${ENV}" \
 	--build.exclude_dir "node_modules" \
 	--build.include_ext "go" \
 	--build.stop_on_error "false" \
@@ -69,7 +69,7 @@ live:
 	make -j5 live/templ live/server live/tailwind live/esbuild live/sync_assets
 
 # ==================================================================================== #
-# QUALITY CONTROL 
+# QUALITY CONTROL
 # ==================================================================================== #
 
 ## audit: tidy and vendor dependencies and format, vet and test all code
