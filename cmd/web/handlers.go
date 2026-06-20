@@ -30,7 +30,6 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) about(w http.ResponseWriter, r *http.Request) {
-	// TODO: could be cached, why re-render?
 	component := templates.About("About")
 	component.Render(r.Context(), w)
 }
@@ -43,7 +42,6 @@ func (app *application) liveUsers(w http.ResponseWriter, r *http.Request) {
 func (app *application) chatPost(w http.ResponseWriter, r *http.Request) {
 	chatType := r.PathValue("type")
 	if !(chatType == "video" || chatType == "text") {
-		w.WriteHeader(http.StatusBadRequest)
 		component := templates.InterestInput([]string{}, fmt.Errorf("invalid chat type"))
 		component.Render(r.Context(), w)
 		return
@@ -53,7 +51,6 @@ func (app *application) chatPost(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
 	if interestsErr != nil {
-		w.WriteHeader(http.StatusBadRequest)
 		component := templates.InterestInput(interests, interestsErr)
 		component.Render(r.Context(), w)
 		return
