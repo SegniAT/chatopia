@@ -3,17 +3,14 @@ package main
 import (
 	"context"
 	"io"
-	"log/slog"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
-	"os"
 	"testing"
 	"time"
 
-	internalWS "github.com/SegniAdebaGodsSon/internal/websocket"
-	internalLogger "github.com/SegniAdebaGodsSon/logger"
+	"github.com/SegniAT/internal/matchmaking"
 	"github.com/golangcollege/sessions"
 )
 
@@ -29,24 +26,13 @@ func newTestApplication(_ *testing.T) *application {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	loggerOpts := internalLogger.PrettyHandlerOptions{
-		SlogOpts: slog.HandlerOptions{
-			AddSource: true,
-			Level:     slog.LevelDebug,
-		},
-	}
-
-	logHandler := internalLogger.ContextHandler{
-		Handler: internalLogger.NewPrettyHandler(os.Stdout, loggerOpts),
-	}
-	logger := slog.New(logHandler)
 	return &application{
 		config:  cfg,
 		session: session,
-		hub:     internalWS.NewHub(ctx, logger),
+		hub:     matchmaking.NewHub(ctx, nil),
+		redis:   nil,
 		ctx:     ctx,
 		cancel:  cancel,
-		logger:  logger,
 	}
 }
 

@@ -4,7 +4,7 @@ import (
 	"io/fs"
 	"net/http"
 
-	assets "github.com/SegniAdebaGodsSon"
+	assets "github.com/SegniAT"
 	"github.com/justinas/alice"
 )
 

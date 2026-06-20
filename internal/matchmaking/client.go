@@ -1,4 +1,4 @@
-package websocket
+package matchmaking
 
 import (
 	"fmt"
@@ -15,11 +15,6 @@ const (
 	maxMessageSize = 512
 )
 
-var (
-	newline = []byte{'\n'}
-	space   = []byte{' '}
-)
-
 type Client struct {
 	Hub       *Hub            `json:"-"`
 	send      chan []byte     `json:"-"`
@@ -28,7 +23,7 @@ type Client struct {
 
 	SessionID   string   `json:"session_id"`
 	ChatPartner *Client  `json:"-"`
-	ChatType    string   `json:"chat_type"` // TODO: change to a type/enum
+	ChatType    string   `json:"chat_type"`
 	IsStrict    bool     `json:"is_strict"`
 	Interests   []string `json:"interests"`
 }
@@ -68,15 +63,15 @@ func (client *Client) ReadPump() {
 	defer func() {
 		err := client.Hub.UnregisterClient(client)
 		if err != nil {
-			client.Hub.logger.Error("error in ReadPump, UnregisterClient", slog.String("error", err.Error()))
+			slog.Error("error in ReadPump, UnregisterClient", slog.String("error", err.Error()))
 		}
 		if r := recover(); r != nil {
-			client.Hub.logger.Error("panic in Client.ReadPump", slog.Any("error", r))
+			slog.Error("panic in Client.ReadPump", slog.Any("error", r))
 		}
 	}()
 
 	client.Conn.SetReadLimit(maxMessageSize)
-	client.Conn.SetReadDeadline(time.Now().Add(pongWait))
+	_ = client.Conn.SetReadDeadline(time.Now().Add(pongWait))
 	client.Conn.SetPongHandler(func(string) error {
 		client.Conn.SetReadDeadline(time.Now().Add(pongWait))
 		return nil
@@ -85,19 +80,20 @@ func (client *Client) ReadPump() {
 	for {
 		select {
 		case <-client.Hub.ctx.Done():
+			slog.Info("closing ReadPump (cancellation)")
 			return
 		default:
 			message := &Message{}
 			err := client.Conn.ReadJSON(message)
 			if err != nil {
 				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					client.Hub.logger.Error("ReadPump: can't read from connection ", slog.String("error", err.Error()))
+					slog.Error("ReadPump: can't read from connection ", slog.String("error", err.Error()))
 				}
-				break
+				return
 			}
 
 			message.From = client
-			client.Hub.Recieve <- message
+			client.Hub.Receive <- message
 		}
 	}
 }
@@ -109,20 +105,19 @@ func (client *Client) WritePump() {
 		client.Conn.Close()
 
 		if r := recover(); r != nil {
-			client.Hub.logger.Error("panic in Client.WritePump", slog.Any("error", r))
+			slog.Error("panic in Client.WritePump", slog.Any("error", r))
 		}
 	}()
 
 	for {
 		select {
 		case <-client.Hub.ctx.Done():
-			client.Hub.logger.Info("closing WritePump (cancellation)")
+			slog.Info("closing WritePump (cancellation)")
 			return
 		case message, ok := <-client.send:
 			client.Conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
-				// the hub closed the channel
-				client.Conn.WriteMessage(websocket.CloseMessage, []byte{})
+				_ = client.Conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 
@@ -137,7 +132,7 @@ func (client *Client) WritePump() {
 				return
 			}
 		case <-ticker.C:
-			client.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+			_ = client.Conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := client.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
 			}
@@ -177,5 +172,6 @@ func (client *Client) Disconnect() *Client {
 	if partner != nil {
 		partner.ChatPartner = nil
 	}
+
 	return partner
 }

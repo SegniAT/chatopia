@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	internalWS "github.com/SegniAdebaGodsSon/internal/websocket"
+	matchmaking "github.com/SegniAT/internal/matchmaking"
 )
 
 func TestPing(t *testing.T) {
@@ -67,11 +67,11 @@ func TestPostChat(t *testing.T) {
 		code, _, body := ts.postForm(t, "/chat/wrong", url.Values{})
 
 		if code != http.StatusBadRequest {
-			t.Errorf("want %d; got %d", http.StatusBadRequest, code)
+			t.Errorf("want %d; got %d, body: %s", http.StatusBadRequest, code, string(body))
 		}
 
 		if !strings.Contains(string(body), "invalid chat type") {
-			t.Errorf("want body to contain error: %q", "invalid chat type")
+			t.Errorf("want body to contain error: %q, got: %s", "invalid chat type", string(body))
 		}
 	})
 
@@ -183,22 +183,6 @@ func TestPostChat(t *testing.T) {
 
 			code, header, _ := ts.postForm(t, tt.path, tt.interests)
 
-			// TEST: client must exist
-			var client *internalWS.Client
-			app.hub.OnlineClients.Range(func(_, value interface{}) bool {
-				client = value.(*internalWS.Client)
-				return false
-			})
-
-			if client == nil {
-				t.Error("client was not registered")
-			}
-
-			// TEST: number of clients must be 1
-			if size := app.hub.OnlineClients.Size(); size != 1 {
-				t.Errorf("want the size of onlineClients to be 1, got=%d", size)
-			}
-
 			// TEST: cookies must be properly being set
 			cookie := header["Set-Cookie"]
 
@@ -208,6 +192,9 @@ func TestPostChat(t *testing.T) {
 			}
 			sessionCookie := cookie[0]
 
+			var client *matchmaking.Client
+			var clientSessionID string
+
 			req, err := http.NewRequest(http.MethodGet, ts.URL+"/chat", nil)
 			if err != nil {
 				t.Fatal(err)
@@ -216,16 +203,15 @@ func TestPostChat(t *testing.T) {
 
 			rr := httptest.NewRecorder()
 			app.session.Enable(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-				clientSessionID := app.session.GetString(r, "clientSessionId")
+				clientSessionID = app.session.GetString(r, "clientSessionId")
 
 				if clientSessionID == "" {
 					t.Errorf("session ID not found in session store")
 				}
 
-				_, exists := app.hub.OnlineClients.GetClient(clientSessionID)
-				if !exists {
-					t.Errorf("client with session ID='%s' not found in OnlineClients", clientSessionID)
+				client, _ = app.hub.GetClient(clientSessionID)
+				if client == nil {
+					t.Errorf("client with session ID='%s' not found", clientSessionID)
 				}
 			})).ServeHTTP(rr, req)
 

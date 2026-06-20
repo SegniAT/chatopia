@@ -7,6 +7,8 @@ import (
 	"io"
 	"log"
 	"log/slog"
+	"path/filepath"
+	"runtime"
 
 	"github.com/fatih/color"
 )
@@ -59,8 +61,24 @@ func (h *PrettyHandler) Handle(ctx context.Context, r slog.Record) error {
 	timeStr := r.Time.Format("15:05:05.000")
 	msg := color.CyanString(r.Message)
 
+	sourceStr := ""
+	if r.PC != 0 {
+		fs := runtime.CallersFrames([]uintptr{r.PC})
+		f, _ := fs.Next()
+		if f.File != "" {
+			shortFile := filepath.Base(f.File)
+			sourceStr = fmt.Sprintf(" %s:%d ", shortFile, f.Line)
+		}
+	}
+
 	// print
-	h.l.Println(fmt.Sprintf("[%s %s]", dateStr, timeStr), level, msg, color.WhiteString(string(b)))
+	h.l.Println(
+		fmt.Sprintf("[%s %s]", dateStr, timeStr),
+		level,
+		msg,
+		color.WhiteString(string(b)),
+		color.New(color.FgYellow, color.BgBlack, color.Italic).Sprintf(sourceStr),
+	)
 
 	return nil
 }

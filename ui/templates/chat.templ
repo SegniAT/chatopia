@@ -130,7 +130,8 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 				// TODO: remember to set the debug value to 0/1
 				window.peer = new Peer({{ peerID }}, {
 					//host: "192.168.115.47",
-					//port: 9000,
+					host: "localhost",
+					port: 9000,
 					debug: 1,
 					secure: false,
 					config: {
@@ -150,12 +151,7 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 					wsEndConnectionMessage()
 				});
 
-				window.peer.on('close', () => {
-					console.error('PeerJS closed');
-					wsEndConnectionMessage()
-				});
-
-				window.peer.on('open', id => {
+			window.peer.on('open', id => {
 					console.log('My peer ID is now registered with the server:', id);
 
 					// We only try to connect if we have a strangerPeerID and a valid peer object.

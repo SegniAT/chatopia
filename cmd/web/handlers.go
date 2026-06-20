@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	internalWS "github.com/SegniAdebaGodsSon/internal/websocket"
-	"github.com/SegniAdebaGodsSon/ui/templates"
+	"github.com/SegniAT/internal/matchmaking"
+	"github.com/SegniAT/ui/templates"
 	"github.com/google/uuid"
 	gorillaWS "github.com/gorilla/websocket"
 )
@@ -30,12 +30,13 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) about(w http.ResponseWriter, r *http.Request) {
+	// TODO: could be cached, why re-render?
 	component := templates.About("About")
 	component.Render(r.Context(), w)
 }
 
 func (app *application) liveUsers(w http.ResponseWriter, r *http.Request) {
-	component := templates.LiveUsers(app.hub.Matchmaker.ClientsCount())
+	component := templates.LiveUsers(app.hub.ClientCount())
 	component.Render(r.Context(), w)
 }
 
@@ -58,18 +59,22 @@ func (app *application) chatPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientSessionId := uuid.NewString()
+	client := matchmaking.NewClient(uuid.NewString(), chatType, isStrict, interests, app.hub)
 
-	client := internalWS.NewClient(clientSessionId, chatType, isStrict, interests, app.hub)
+	err := app.hub.RegisterClient(client)
+	if err != nil {
+		slog.ErrorContext(r.Context(), "failed to register client with Hub", slog.String("error", err.Error()))
+		// TODO: think of a better way to handle errors
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 
-	app.hub.Matchmaker.AddClient(client)
-
-	app.logger.InfoContext(r.Context(),
-		"client registered to store",
+	slog.InfoContext(r.Context(),
+		"client registered to HUB",
 		slog.Any("client", client),
 	)
 
-	app.session.Put(r, "clientSessionId", clientSessionId)
+	app.session.Put(r, "clientSessionId", client.SessionID)
 
 	w.Header().Set("HX-Redirect", "/chat")
 	w.WriteHeader(http.StatusSeeOther)
@@ -78,7 +83,7 @@ func (app *application) chatPost(w http.ResponseWriter, r *http.Request) {
 func (app *application) chat(w http.ResponseWriter, r *http.Request) {
 	sessionId := app.session.GetString(r, "clientSessionId")
 
-	client, ok := app.hub.Matchmaker.GetClient(sessionId)
+	client, ok := app.hub.GetClient(sessionId)
 	if !ok {
 		w.Header().Set("HX-Redirect", "/")
 		w.WriteHeader(http.StatusSeeOther)
@@ -93,14 +98,15 @@ func (app *application) chat(w http.ResponseWriter, r *http.Request) {
 func (app *application) ServeWs(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		app.logger.ErrorContext(r.Context(), "serveWs error", slog.String("error", err.Error()))
+		slog.ErrorContext(r.Context(), "serveWs error", slog.String("error", err.Error()))
 		w.Header().Set("HX-Redirect", "/")
 		w.WriteHeader(http.StatusSeeOther)
+		return
 	}
 
 	sessionId := app.session.GetString(r, "clientSessionId")
 
-	client, ok := app.hub.Matchmaker.GetClient(sessionId)
+	client, ok := app.hub.GetClient(sessionId)
 	if !ok {
 		w.Header().Set("HX-Redirect", "/")
 		w.WriteHeader(http.StatusSeeOther)
@@ -108,17 +114,9 @@ func (app *application) ServeWs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	client.Conn = conn
+	client.Searching = true
 
-	err = app.hub.RegisterClient(client)
-	if err != nil {
-		w.Header().Set("HX-Redirect", "/")
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-
-	app.logger.InfoContext(r.Context(),
-		"client registered to HUB",
-		slog.Any("client", client),
-	)
+	app.hub.StartMatchmaking(client)
 
 	go client.WritePump()
 	go client.ReadPump()

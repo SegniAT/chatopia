@@ -1,4 +1,4 @@
-package websocket
+package matchmaking
 
 import (
 	"bytes"
@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+// Message represents the type of message received from a web client's websocket message.
 type Message struct {
 	Type        string `json:"message_type"`
 	ChatMessage string `json:"chat_message"`
@@ -21,11 +22,10 @@ type Message struct {
 	} `json:"HEADERS"`
 	From *Client `json:"-"`
 }
-
 func (msg *Message) Decode(payload []byte) error {
 	reader := bytes.NewReader(payload)
 	dec := json.NewDecoder(reader)
-	dec.DisallowUnknownFields() // This will reject unknown fields
+	dec.DisallowUnknownFields()
 
 	if err := dec.Decode(msg); err != nil {
 		var syntaxError *json.SyntaxError
@@ -54,7 +54,6 @@ func (msg *Message) Decode(payload []byte) error {
 		}
 	}
 
-	// Check for extra data after the first JSON object
 	if err := dec.Decode(&struct{}{}); err != io.EOF {
 		return errors.New("body must only contain a single JSON value")
 	}

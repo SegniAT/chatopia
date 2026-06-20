@@ -2,23 +2,17 @@ package main
 
 import (
 	"context"
-	"flag"
 	"log"
 	"log/slog"
 	"os"
 	"sync"
 	"time"
 
-	internalWS "github.com/SegniAdebaGodsSon/internal/websocket"
-	internalLogger "github.com/SegniAdebaGodsSon/logger"
+	"github.com/SegniAT/internal/matchmaking"
+	"github.com/SegniAT/internal/redis"
+	internalLogger "github.com/SegniAT/logger"
 	"github.com/golangcollege/sessions"
 )
-
-type config struct {
-	port   int
-	env    string
-	secret string
-}
 
 type contextKey string
 
@@ -28,27 +22,29 @@ type application struct {
 	config  config
 	wg      sync.WaitGroup
 	session *sessions.Session
-	hub     *internalWS.Hub
+	hub     *matchmaking.Hub
 	ctx     context.Context
 	cancel  context.CancelFunc
-	logger  *slog.Logger
+	redis   *redis.Client
 }
 
 func main() {
-	var cfg config
-
-	flag.IntVar(&cfg.port, "port", 4000, "HTTP network address port")
-	flag.StringVar(&cfg.env, "env", "development", "Environment (development|testing|production)")
-	flag.StringVar(&cfg.secret, "secret", "bP1e8X9y2@c5W3u1Nv7K!r4Lq6QjZ0Fm", "Secret key")
-
-	flag.Parse()
-
-	logger, logHandler, err := setupLogger(&cfg)
-	if err != nil {
-		log.Fatalf("error setting up logging %v", err)
-	}
+	cfg := loadConfig()
+	setupLogger(cfg.env)
 
 	ctx, cancel := context.WithCancel(context.Background())
+
+	redisClient, err := redis.NewClient(redis.Config{
+		Addr:     cfg.redisEnv,
+		PoolSize: 100,
+	})
+	if err != nil {
+		log.Fatalf("failed to connect to redis: %v", err)
+	}
+
+	defer redisClient.Close()
+
+	slog.InfoContext(ctx, "connected to redis", "addr", cfg.redisEnv)
 
 	session := sessions.New([]byte(cfg.secret))
 	session.Lifetime = 12 * time.Hour
@@ -57,23 +53,23 @@ func main() {
 	app := &application{
 		config:  cfg,
 		session: session,
-		hub:     internalWS.NewHub(ctx, logger),
+		hub:     matchmaking.NewHub(ctx, redisClient),
 		ctx:     ctx,
 		cancel:  cancel,
-		logger:  logger,
+		redis:   redisClient,
 	}
 
-	app.logger.InfoContext(ctx, "Starting Hub")
-	go app.hub.Run()
+	app.hub.Start()
+	slog.InfoContext(ctx, "Hub started")
 
-	err = app.serve(logHandler)
+	err = app.serve()
 
 	if err != nil {
 		slog.Error(err.Error())
 	}
 }
 
-func setupLogger(cfg *config) (*slog.Logger, slog.Handler, error) {
+func setupLogger(env string) {
 	loggerOpts := internalLogger.PrettyHandlerOptions{
 		SlogOpts: slog.HandlerOptions{
 			AddSource: true,
@@ -83,20 +79,16 @@ func setupLogger(cfg *config) (*slog.Logger, slog.Handler, error) {
 
 	var logHandler slog.Handler
 
-	switch cfg.env {
+	switch env {
 	case "production":
-		file, err := os.OpenFile("./app.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-		if err != nil {
-			log.Fatalf("Failed to open log file %v", err)
-		}
-
 		logHandler = internalLogger.ContextHandler{
-			Handler: slog.NewJSONHandler(file, &loggerOpts.SlogOpts),
+			Handler: slog.NewJSONHandler(os.Stdout, &loggerOpts.SlogOpts),
 		}
 	default:
 		logHandler = internalLogger.ContextHandler{
 			Handler: internalLogger.NewPrettyHandler(os.Stdout, loggerOpts),
 		}
 	}
-	return slog.New(logHandler), logHandler, nil
+
+	slog.SetDefault(slog.New(logHandler))
 }

@@ -14,7 +14,7 @@ func (app *application) extractInterests(w http.ResponseWriter, r *http.Request)
 	r.Body = http.MaxBytesReader(w, r.Body, MAX_REQUEST_SIZE)
 	err := r.ParseForm()
 	if err != nil {
-		return isStrict, interests, err
+		return false, nil, err
 	}
 
 	interests = r.Form["interests[]"]

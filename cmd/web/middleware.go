@@ -5,11 +5,9 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
-	"sync"
 
-	"github.com/SegniAdebaGodsSon/logger"
+	"github.com/SegniAT/logger"
 	"github.com/google/uuid"
-	"golang.org/x/time/rate"
 )
 
 func (app *application) addRequestID(next http.Handler) http.Handler {
@@ -23,7 +21,7 @@ func (app *application) addRequestID(next http.Handler) http.Handler {
 
 func (app *application) logRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		app.logger.InfoContext(r.Context(),
+		slog.InfoContext(r.Context(),
 			"incoming request",
 			slog.String("method", r.Method),
 			slog.String("remote_addr", r.RemoteAddr),
@@ -67,7 +65,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 		}
 
 		clientSessionId := app.session.GetString(r, "clientSessionId")
-		_, exists = app.hub.Matchmaker.GetClient(clientSessionId)
+		_, exists = app.hub.GetClient(clientSessionId)
 		if !exists {
 			next.ServeHTTP(w, r)
 			return
@@ -91,34 +89,29 @@ func (app *application) requireAuthentication(next http.Handler) http.Handler {
 }
 
 func (app *application) rateLimit(next http.Handler) http.Handler {
-	var (
-		mu      sync.Mutex
-		clients = make(map[string]*rate.Limiter)
-	)
-
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if app.redis == nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		ip, _, err := net.SplitHostPort(r.RemoteAddr)
 		if err != nil {
-			w.Header().Set("HX-Trigger-After-Settle", `{"showToast": "Couldn't extract your IP address!"}`)
-			w.Header().Set("HX-Redirect", "/")
-			w.WriteHeader(http.StatusSeeOther)
+			ip = r.RemoteAddr
+		}
+
+		allowed, err := app.redis.AllowIP(r.Context(), ip, 5)
+		if err != nil {
+			slog.ErrorContext(r.Context(), "rate limiter error", slog.String("error", err.Error()))
+			next.ServeHTTP(w, r)
 			return
 		}
 
-		mu.Lock()
-
-		if _, found := clients[ip]; !found {
-			clients[ip] = rate.NewLimiter(2, 5)
-		}
-
-		if !clients[ip].Allow() {
-			mu.Unlock()
-			w.Write([]byte("Rate limit exceeded!"))
+		if !allowed {
 			w.WriteHeader(http.StatusTooManyRequests)
+			w.Write([]byte("Rate limit exceeded!"))
 			return
 		}
-
-		mu.Unlock()
 
 		next.ServeHTTP(w, r)
 	})

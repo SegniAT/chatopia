@@ -12,14 +12,14 @@ import (
 	"time"
 )
 
-func (app *application) serve(h slog.Handler) error {
+func (app *application) serve() error {
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", app.config.port),
 		Handler:      app.routes(),
 		IdleTimeout:  2 * time.Minute,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
-		ErrorLog:     slog.NewLogLogger(h, slog.LevelError),
+		ErrorLog:     slog.NewLogLogger(slog.Default().Handler(), slog.LevelError),
 	}
 
 	shutdownError := make(chan error)
@@ -30,7 +30,7 @@ func (app *application) serve(h slog.Handler) error {
 		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 		s := <-quit
 
-		app.logger.InfoContext(context.Background(), "shutting down server", slog.String("signal", s.String()))
+		slog.InfoContext(context.Background(), "shutting down server", slog.String("signal", s.String()))
 
 		// cancel background tasks
 		// TODO: this might be bad, srv.Shutdown() already waits for active connections without interrupting
@@ -44,13 +44,13 @@ func (app *application) serve(h slog.Handler) error {
 			shutdownError <- err
 		}
 
-		app.logger.InfoContext(context.Background(), "shutting down server", slog.String("signal", s.String()))
+		slog.InfoContext(context.Background(), "shutting down server", slog.String("signal", s.String()))
 
 		app.wg.Wait()
 		shutdownError <- nil
 	}()
 
-	app.logger.InfoContext(context.Background(), "starting server", slog.String("addr", srv.Addr), slog.String("env", app.config.env))
+	slog.InfoContext(context.Background(), "starting server", slog.String("addr", srv.Addr), slog.String("env", app.config.env))
 
 	//err := srv.ListenAndServeTLS("/home/sgngodsson/Desktop/Chatopia/tls/cert.pem", "/home/sgngodsson/Desktop/Chatopia/tls/key.pem")
 	err := srv.ListenAndServe()
@@ -66,7 +66,7 @@ func (app *application) serve(h slog.Handler) error {
 		return err
 	}
 
-	app.logger.InfoContext(context.Background(), "stopped server", slog.String("addr", srv.Addr), slog.String("env", app.config.env))
+	slog.InfoContext(context.Background(), "stopped server", slog.String("addr", srv.Addr), slog.String("env", app.config.env))
 
 	return nil
 }
