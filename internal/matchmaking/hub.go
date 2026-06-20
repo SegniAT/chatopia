@@ -20,7 +20,7 @@ func init() {
 	HtmlTemplates = preloadTemplates()
 }
 
-const matchTimeout = 60 * time.Second
+const matchTimeout = 30 * time.Second
 
 type Hub struct {
 	// clients stores online clients.
@@ -203,7 +203,7 @@ func (h *Hub) Start() {
 
 						message.From.SendMessage(HtmlTemplates.ConnectionStatusDisconnected.Bytes())
 						message.From.SendMessage(HtmlTemplates.ActionBtnNew.Bytes())
-						}
+					}
 				}()
 			}
 		}
@@ -217,6 +217,12 @@ func (h *Hub) Stop() {
 
 func (h *Hub) StartMatchmaking(client *Client) {
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				slog.Error("panic in Hub.StartMatchmaking", slog.Any("error", r))
+			}
+		}()
+
 		session, err := redis.GetSession(h.ctx, h.RedisClient, client.SessionID)
 		if err != nil {
 			slog.Error("failed to get session for matchmaking", slog.String("error", err.Error()))

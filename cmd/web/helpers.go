@@ -33,6 +33,10 @@ func (app *application) validateInterests(w http.ResponseWriter, r *http.Request
 		return isStrict, interests, err
 	}
 
+	if len(interestsRaw) == 0 && isStrict {
+		return isStrict, interests, fmt.Errorf("please add interests for strict matching")
+	}
+
 	if len(interestsRaw) == 0 {
 		return isStrict, interests, interestsErr
 	}
