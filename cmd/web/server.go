@@ -32,9 +32,7 @@ func (app *application) serve() error {
 
 		slog.InfoContext(context.Background(), "shutting down server", slog.String("signal", s.String()))
 
-		// cancel background tasks
-		// TODO: this might be bad, srv.Shutdown() already waits for active connections without interrupting
-		app.cancel()
+		app.hub.Stop()
 
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
@@ -46,7 +44,6 @@ func (app *application) serve() error {
 
 		slog.InfoContext(context.Background(), "shutting down server", slog.String("signal", s.String()))
 
-		app.wg.Wait()
 		shutdownError <- nil
 	}()
 

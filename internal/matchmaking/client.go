@@ -60,6 +60,7 @@ func (client *Client) IsActive() bool {
 }
 
 func (client *Client) ReadPump() {
+	defer client.Hub.clientWg.Done()
 	defer func() {
 		err := client.Hub.UnregisterClient(client)
 		if err != nil {
@@ -80,7 +81,7 @@ func (client *Client) ReadPump() {
 	for {
 		select {
 		case <-client.Hub.ctx.Done():
-			slog.Info("closing ReadPump (cancellation)")
+			slog.Info("closing ReadPump (HUB context cancellation)")
 			return
 		default:
 			message := &Message{}
@@ -93,12 +94,13 @@ func (client *Client) ReadPump() {
 			}
 
 			message.From = client
-			client.Hub.Receive <- message
+			client.Hub.receive <- message
 		}
 	}
 }
 
 func (client *Client) WritePump() {
+	defer client.Hub.clientWg.Done()
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
@@ -112,7 +114,7 @@ func (client *Client) WritePump() {
 	for {
 		select {
 		case <-client.Hub.ctx.Done():
-			slog.Info("closing WritePump (cancellation)")
+			slog.Info("closing WritePump (HUB context cancellation)")
 			return
 		case message, ok := <-client.send:
 			client.Conn.SetWriteDeadline(time.Now().Add(writeWait))

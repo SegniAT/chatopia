@@ -22,6 +22,7 @@ type Message struct {
 	} `json:"HEADERS"`
 	From *Client `json:"-"`
 }
+
 func (msg *Message) Decode(payload []byte) error {
 	reader := bytes.NewReader(payload)
 	dec := json.NewDecoder(reader)

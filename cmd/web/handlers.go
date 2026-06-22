@@ -114,7 +114,5 @@ func (app *application) ServeWs(w http.ResponseWriter, r *http.Request) {
 	client.Searching = true
 
 	app.hub.StartMatchmaking(client)
-
-	go client.WritePump()
-	go client.ReadPump()
+	app.hub.ClientConnected(client)
 }

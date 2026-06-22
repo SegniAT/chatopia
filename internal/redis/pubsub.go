@@ -4,10 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"sync"
 	"time"
-
-	"github.com/redis/go-redis/v9"
 )
 
 type MatchNotification struct {
@@ -19,15 +16,10 @@ type MatchNotification struct {
 
 type Notifier struct {
 	client *Client
-	subs   map[string]*redis.PubSub
-	mu     sync.RWMutex
 }
 
 func NewNotifier(c *Client) *Notifier {
-	return &Notifier{
-		client: c,
-		subs:   make(map[string]*redis.PubSub),
-	}
+	return &Notifier{client: c}
 }
 
 func (n *Notifier) NotifyMatch(ctx context.Context, session *Session) error {
@@ -88,14 +80,4 @@ func (n *Notifier) SubscribeMatch(ctx context.Context, sessionID string) (<-chan
 	}
 
 	return notifyChan, cleanup
-}
-
-func (n *Notifier) Close() {
-	n.mu.Lock()
-	defer n.mu.Unlock()
-
-	for _, sub := range n.subs {
-		sub.Close()
-	}
-	n.subs = nil
 }

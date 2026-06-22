@@ -24,15 +24,11 @@ func newTestApplication(_ *testing.T) *application {
 	session.Lifetime = 12 * time.Hour
 	session.Secure = cfg.env == "production"
 
-	ctx, cancel := context.WithCancel(context.Background())
-
 	return &application{
 		config:  cfg,
 		session: session,
-		hub:     matchmaking.NewHub(ctx, nil),
+		hub:     matchmaking.NewHub(context.Background(), nil),
 		redis:   nil,
-		ctx:     ctx,
-		cancel:  cancel,
 	}
 }
 

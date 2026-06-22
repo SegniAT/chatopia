@@ -5,7 +5,6 @@ import (
 	"log"
 	"log/slog"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/SegniAT/internal/matchmaking"
@@ -20,19 +19,14 @@ const contextKeyIsAuthenticated = contextKey("isAuthenticated")
 
 type application struct {
 	config  config
-	wg      sync.WaitGroup
 	session *sessions.Session
 	hub     *matchmaking.Hub
-	ctx     context.Context
-	cancel  context.CancelFunc
 	redis   *redis.Client
 }
 
 func main() {
 	cfg := loadConfig()
 	setupLogger(cfg.env)
-
-	ctx, cancel := context.WithCancel(context.Background())
 
 	redisClient, err := redis.NewClient(redis.Config{
 		Addr:     cfg.redisEnv,
@@ -44,7 +38,7 @@ func main() {
 
 	defer redisClient.Close()
 
-	slog.InfoContext(ctx, "connected to redis", "addr", cfg.redisEnv)
+	slog.Info("connected to redis", "addr", cfg.redisEnv)
 
 	session := sessions.New([]byte(cfg.secret))
 	session.Lifetime = 12 * time.Hour
@@ -53,14 +47,12 @@ func main() {
 	app := &application{
 		config:  cfg,
 		session: session,
-		hub:     matchmaking.NewHub(ctx, redisClient),
-		ctx:     ctx,
-		cancel:  cancel,
+		hub:     matchmaking.NewHub(context.Background(), redisClient),
 		redis:   redisClient,
 	}
 
 	app.hub.Start()
-	slog.InfoContext(ctx, "Hub started")
+	slog.Info("Hub started")
 
 	err = app.serve()
 

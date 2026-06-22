@@ -24,13 +24,21 @@ const matchTimeout = 30 * time.Second
 
 type Hub struct {
 	// clients stores online clients.
-	clients     sync.Map
+	clients sync.Map
+
 	RedisClient *redis.Client
 	Notifier    *redis.Notifier
-	ctx         context.Context
-	cancel      context.CancelFunc
-	wg          sync.WaitGroup
-	Receive     chan *Message
+
+	// ctx/cancel controls the lifecycle of goroutines owned by Hub
+	// (Start loop, ReadPump, WritePump, waitForMatch).
+	// Redis operations use context.Background() so cleanup completes during shutdown.
+	ctx    context.Context
+	cancel context.CancelFunc
+
+	handlerWg sync.WaitGroup
+	clientWg  sync.WaitGroup
+
+	receive chan *Message
 }
 
 func NewHub(ctx context.Context, redisClient *redis.Client) *Hub {
@@ -40,7 +48,7 @@ func NewHub(ctx context.Context, redisClient *redis.Client) *Hub {
 		Notifier:    redis.NewNotifier(redisClient),
 		ctx:         ctx,
 		cancel:      cancel,
-		Receive:     make(chan *Message, 256),
+		receive:     make(chan *Message, 256),
 	}
 }
 
@@ -53,7 +61,7 @@ func (h *Hub) RegisterClient(client *Client) error {
 
 	if h.RedisClient != nil {
 		session := redis.NewSession(client.SessionID, client.ChatType, client.IsStrict, client.Interests, time.Now())
-		err := session.Save(h.ctx, h.RedisClient)
+		err := session.Save(context.Background(), h.RedisClient)
 		if err != nil {
 			return fmt.Errorf("Hub.RegisterClient error saving session: %v", err)
 		}
@@ -82,9 +90,9 @@ func (h *Hub) UnregisterClient(client *Client) error {
 	}
 
 	if h.RedisClient != nil {
-		redis.RemoveFromQueue(h.ctx, h.RedisClient, client.ChatType, client.SessionID)
+		redis.RemoveFromQueue(context.Background(), h.RedisClient, client.ChatType, client.SessionID)
 
-		if err := redis.DeleteSession(h.ctx, h.RedisClient, client.SessionID); err != nil {
+		if err := redis.DeleteSession(context.Background(), h.RedisClient, client.SessionID); err != nil {
 			return fmt.Errorf("Hub.UnregisterClient redis.DeleteSession: %w", err)
 		}
 	}
@@ -127,13 +135,17 @@ func (h *Hub) Start() {
 		for {
 			select {
 			case <-h.ctx.Done():
-				h.wg.Wait()
+				h.handlerWg.Wait()
 				return
 
-			case message := <-h.Receive:
-				h.wg.Add(1)
+			case message := <-h.receive:
+				h.handlerWg.Add(1)
 				go func() {
-					defer h.wg.Done()
+					defer h.handlerWg.Done()
+
+					slog.Debug("--- MESSAGE RECEIVED ---",
+						slog.String("message type", message.Type),
+					)
 
 					switch message.Type {
 					case "typing":
@@ -177,9 +189,9 @@ func (h *Hub) Start() {
 						}
 
 						if h.RedisClient != nil {
-							redis.ClearPartnerFields(h.ctx, h.RedisClient, message.From.SessionID)
+							redis.ClearPartnerFields(context.Background(), h.RedisClient, message.From.SessionID)
 							if partnerSessionID != "" {
-								redis.ClearPartnerFields(h.ctx, h.RedisClient, partnerSessionID)
+								redis.ClearPartnerFields(context.Background(), h.RedisClient, partnerSessionID)
 							}
 						}
 
@@ -211,8 +223,24 @@ func (h *Hub) Start() {
 }
 
 func (h *Hub) Stop() {
+	// Only for good measure, the connections are already closed by the client ReadPump and WritePump goroutines.
+	h.clients.Range(func(_, value any) bool {
+		client := value.(*Client)
+		if client.Conn != nil {
+			client.Conn.Close()
+		}
+		return true
+	})
+
 	h.cancel()
-	h.Notifier.Close()
+	h.clientWg.Wait()
+	h.handlerWg.Wait()
+}
+
+func (h *Hub) ClientConnected(client *Client) {
+	h.clientWg.Add(2)
+	go client.WritePump()
+	go client.ReadPump()
 }
 
 func (h *Hub) StartMatchmaking(client *Client) {
@@ -223,13 +251,13 @@ func (h *Hub) StartMatchmaking(client *Client) {
 			}
 		}()
 
-		session, err := redis.GetSession(h.ctx, h.RedisClient, client.SessionID)
+		session, err := redis.GetSession(context.Background(), h.RedisClient, client.SessionID)
 		if err != nil {
 			slog.Error("failed to get session for matchmaking", slog.String("error", err.Error()))
 			return
 		}
 
-		result, err := redis.Match(h.ctx, h.RedisClient, session)
+		result, err := redis.Match(context.Background(), h.RedisClient, session)
 		if err != nil {
 			slog.Error("matchmaking failed", slog.String("error", err.Error()))
 			client.SendMessage(HtmlTemplates.ConnectionStatusNoClientsFound.Bytes())
@@ -238,7 +266,7 @@ func (h *Hub) StartMatchmaking(client *Client) {
 		}
 
 		if result.Found {
-			partner, err := redis.GetSession(h.ctx, h.RedisClient, result.Partner.SessionID)
+			partner, err := redis.GetSession(context.Background(), h.RedisClient, result.Partner.SessionID)
 			if err != nil {
 				slog.Error("failed to get partner session", slog.String("error", err.Error()))
 				return
@@ -253,7 +281,7 @@ func (h *Hub) StartMatchmaking(client *Client) {
 }
 
 func (h *Hub) waitForMatch(client *Client) {
-	notifyChan, cleanup := h.Notifier.SubscribeMatch(h.ctx, client.SessionID)
+	notifyChan, cleanup := h.Notifier.SubscribeMatch(context.Background(), client.SessionID)
 	defer cleanup()
 
 	timeout := time.After(matchTimeout)
@@ -269,7 +297,7 @@ func (h *Hub) waitForMatch(client *Client) {
 					return
 				}
 
-				partner, err := redis.GetSession(h.ctx, h.RedisClient, notify.PartnerID)
+				partner, err := redis.GetSession(context.Background(), h.RedisClient, notify.PartnerID)
 				if err != nil {
 					slog.Error("failed to get partner session", slog.String("error", err.Error()))
 					return
@@ -322,7 +350,7 @@ func (h *Hub) connectPairedClients(c1 *Client, partner *redis.Session) {
 	c2.SendMessage(HtmlTemplates.ActionBtnConnecting.Bytes())
 
 	// Notify the partner in case they're waiting in waitForMatch
-	if err := h.Notifier.NotifyMatch(h.ctx, partner); err != nil {
+	if err := h.Notifier.NotifyMatch(context.Background(), partner); err != nil {
 		slog.Error("failed to notify partner of match", slog.String("error", err.Error()))
 	}
 
