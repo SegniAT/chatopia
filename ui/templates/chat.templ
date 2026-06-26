@@ -111,6 +111,12 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 				window.peer.destroy();
 			}
 
+			if (window.localStream) {
+				console.log("Stopping previous media stream.");
+				window.localStream.getTracks().forEach(t => t.stop());
+				window.localStream = null;
+			}
+
 			if ({{ peerID }} !== {{ uuid.Nil }}) {
 				const isCaller = {{ isCaller }};
 				window._reconnectAttempts = 0;
@@ -215,6 +221,7 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 									video: true,
 									audio: true
 								}).then(stream => {
+									window.localStream = stream;
 									addVideoStream(localVideo, stream);
 
 									console.log("📹 VIDEO CALL: initiated");
@@ -243,6 +250,7 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 								let localStream = null;
 								navigator.mediaDevices.getUserMedia({ video: true, audio: true })
 									.then(stream => {
+										window.localStream = stream;
 										localStream = stream;
 										addVideoStream(localVideo, stream);
 									}).catch(err => {
