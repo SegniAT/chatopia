@@ -16,10 +16,9 @@ const (
 )
 
 type Client struct {
-	Hub       *Hub            `json:"-"`
-	send      chan []byte     `json:"-"`
-	Conn      *websocket.Conn `json:"-"`
-	Searching bool            `json:"-"`
+	Hub  *Hub            `json:"-"`
+	send chan []byte     `json:"-"`
+	Conn *websocket.Conn `json:"-"`
 
 	SessionID   string   `json:"session_id"`
 	ChatPartner *Client  `json:"-"`
@@ -33,7 +32,6 @@ func (c Client) LogValue() slog.Value {
 		slog.String("session_id", c.SessionID),
 		slog.String("chat_type", c.ChatType),
 		slog.Any("interests", c.Interests),
-		slog.Bool("searching", c.Searching),
 		slog.Bool("has_partner", c.ChatPartner != nil),
 	)
 }

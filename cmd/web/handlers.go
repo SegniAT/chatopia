@@ -111,7 +111,6 @@ func (app *application) ServeWs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	client.Conn = conn
-	client.Searching = true
 
 	app.hub.StartMatchmaking(client)
 	app.hub.ClientConnected(client)

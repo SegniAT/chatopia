@@ -134,11 +134,12 @@ hx-get="/live_users"
 hx-trigger="every 10s"
 hx-swap-oob="true"
 */
+
 templ LiveUsers(users int) {
 	<div
 		id="live_users"
 		class="relative flex items-center gap-1 text-base sm:text-2xl bg-chatopia-3/90 px-2 py-1 rounded-sm"
-		>
+	>
 		<!-- Dot positioned inside top-left of the div -->
 		<span class="absolute top-0 left-0 mt-1 ml-1 flex h-2 w-2 sm:h-3 sm:w-3">
 			<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>

@@ -90,7 +90,9 @@ func (h *Hub) UnregisterClient(client *Client) error {
 	}
 
 	if h.RedisClient != nil {
-		redis.RemoveFromQueue(context.Background(), h.RedisClient, client.ChatType, client.SessionID)
+		if err := redis.RemoveFromQueue(context.Background(), h.RedisClient, client.ChatType, client.SessionID); err != nil {
+			return fmt.Errorf("Hub.UnregisterClient redis.RemoveFromQueue: %w", err)
+		}
 
 		if err := redis.DeleteSession(context.Background(), h.RedisClient, client.SessionID); err != nil {
 			return fmt.Errorf("Hub.UnregisterClient redis.DeleteSession: %w", err)
@@ -99,11 +101,11 @@ func (h *Hub) UnregisterClient(client *Client) error {
 
 	h.clients.Delete(client.SessionID)
 
+	// TODO: this probably won't work since the connection is probably closed already
 	client.SendMessage(HtmlTemplates.ConnectionStatusDisconnected.Bytes())
 	client.SendMessage(HtmlTemplates.ActionBtnNew.Bytes())
 
-	partner := client.ChatPartner
-	client.ChatPartner = nil
+	partner := client.Disconnect()
 	if partner != nil {
 		partner.ChatPartner = nil
 		partner.SendMessage(HtmlTemplates.ConnectionStatusDisconnected.Bytes())
@@ -142,10 +144,6 @@ func (h *Hub) Start() {
 				h.handlerWg.Add(1)
 				go func() {
 					defer h.handlerWg.Done()
-
-					slog.Debug("--- MESSAGE RECEIVED ---",
-						slog.String("message type", message.Type),
-					)
 
 					switch message.Type {
 					case "typing":
@@ -223,7 +221,7 @@ func (h *Hub) Start() {
 }
 
 func (h *Hub) Stop() {
-	// Only for good measure, the connections are already closed by the client ReadPump and WritePump goroutines.
+	// Only for good measure, the connections are already closed by the client ReadPump and WritePump goroutines when the hub is stopped.
 	h.clients.Range(func(_, value any) bool {
 		client := value.(*Client)
 		if client.Conn != nil {
