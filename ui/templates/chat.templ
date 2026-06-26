@@ -104,16 +104,6 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 					console.error("Socket wrapper not found on window object.");
 				}
 			}
-
-			function wsEndConnectionMessage() {
-				const chatSocket = window.socketWrapper;
-				if (chatSocket) {
-					chatSocket.send(JSON.stringify({ message_type: "end_connection" }));
-					console.log("Sent 'end_connection' message via WebSocket.");
-				} else {
-					console.error("Socket wrapper not found on window object.");
-				}
-			}
 		</script>
 		<script>
 			if (window.peer) {
@@ -121,11 +111,13 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 				window.peer.destroy();
 			}
 
-			// Use a single, persistent peer object. 'var' prevents re-declaration errors from HTMX swaps.
 			if ({{ peerID }} !== {{ uuid.Nil }}) {
+				const isCaller = {{ isCaller }};
+				window._reconnectAttempts = 0;
+				window._peerConnectRetries = 0;
+
 				console.log("Creating new Peer object with ID:", "{{ peerID }}");
-				// TODO: remember to set the debug value to 0/1
-				window.peer = new Peer({{ peerID }}, {
+				const currentPeer = new Peer({{ peerID }}, {
 					//host: "192.168.115.47",
 					host: "localhost",
 					port: 9000,
@@ -138,21 +130,44 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 						]
 					}
 				});
+				window.peer = currentPeer;
 
-				window.peer.on('error', err => {
+				currentPeer.on('error', err => {
+					if (window.peer !== currentPeer) return;
 					console.error('PeerJS error:', err.type, err);
+
+					// retry logic if the callee is not yet setup and is unavailable
+					if (err.type === 'peer-unavailable' && isCaller) {
+						window._peerConnectRetries++;
+						if (window._peerConnectRetries <= 3) {
+							setTimeout(() => {
+								if (window.peer === currentPeer) {
+									var newConn = currentPeer.connect({{ strangerPeerID }});
+									newConn.on('error', err => console.error('Connection error (retry):', err));
+									newConn.on('open', () => {
+										wsConnectedToPeerMessage()
+										setupChat(newConn);
+									});
+								}
+							}, 1000 * window._peerConnectRetries);
+						}
+					}
 				});
 
-				window.peer.on('disconnected', () => {
-					console.error('PeerJS disconnected');
+				currentPeer.on('disconnected', () => {
+					if (window.peer !== currentPeer) return;
+					console.error('PeerJS disconnected, attempting reconnect...');
+					window._reconnectAttempts++;
+					if (window._reconnectAttempts <= 3) {
+						currentPeer.reconnect();
+					}
 				});
 
-			window.peer.on('open', id => {
+				window.peer.on('open', id => {
 					console.log('My peer ID is now registered with the server:', id);
 
 					// We only try to connect if we have a strangerPeerID and a valid peer object.
 					if ({{ strangerPeerID }} !== {{ uuid.Nil }}) {
-						const isCaller = {{ isCaller }};
 						var conn = null;
 			
 						// Setup text comm
