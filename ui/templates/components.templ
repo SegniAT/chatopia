@@ -55,7 +55,7 @@ templ StrangerTyping() {
 templ ActionButton_NewChat() {
 	<div id="action_button_container">
 		<button
-			onclick="if(window.peer){window.peer.destroy();}"
+			onclick="if(window._activeCall){window._activeCall.close();window._activeCall=null}if(window.peer){window.peer.destroy();}var r=document.querySelector('#remote_video');if(r)r.srcObject=null;"
 			id="action_button"
 			class="border bg-chatopia-1 border-chatopia-3 text-chatopia-2 p-2 font-semibold"
 			type="button"

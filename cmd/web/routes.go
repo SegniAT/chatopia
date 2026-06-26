@@ -9,7 +9,8 @@ import (
 )
 
 func (app *application) routes() http.Handler {
-	standardMiddleware := alice.New(app.rateLimit, app.addRequestID, app.session.Enable, app.recoverPanic, app.logRequest, app.disableCacheInDevMode)
+	// TODO: app.rateLimit
+	standardMiddleware := alice.New(app.addRequestID, app.session.Enable, app.recoverPanic, app.logRequest, app.disableCacheInDevMode)
 	dynamicMiddleware := alice.New(app.authenticate, app.requireAuthentication)
 	mux := http.NewServeMux()
 

@@ -117,6 +117,11 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 				window.localStream = null;
 			}
 
+			if (window._activeCall) {
+				window._activeCall.close();
+				window._activeCall = null;
+			}
+
 			if ({{ peerID }} !== {{ uuid.Nil }}) {
 				const isCaller = {{ isCaller }};
 				window._reconnectAttempts = 0;
@@ -205,7 +210,7 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 
 						// Setup video comm
 						if ({{ video }}) {
-							function addVideoStream (videoElement, stream){
+							function addVideoStream(videoElement, stream) {
 								videoElement.srcObject = stream
 								videoElement.style.transform = 'scaleX(-1)';
 								videoElement.addEventListener('loadedmetadata', () => {
@@ -213,71 +218,63 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 								});
 							}
 
-							const localVideo= document.querySelector("#local_video");
-							const remoteVideo= document.querySelector("#remote_video");
+							const localVideo = document.querySelector("#local_video");
+							const remoteVideo = document.querySelector("#remote_video");
 
-							if (isCaller){
-								navigator.mediaDevices.getUserMedia({
-									video: true,
-									audio: true
-								}).then(stream => {
+							const streamPromise = navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+								.then(stream => {
 									window.localStream = stream;
 									addVideoStream(localVideo, stream);
+									return stream;
+								})
+								.catch(err => {
+									console.error("Failed to get local stream:", err);
+								});
 
-									console.log("📹 VIDEO CALL: initiated");
+							if (isCaller) {
+								console.log("📹 VIDEO CALL: initiated");
+								streamPromise.then(stream => {
+									if (!stream) return;
 									const call = window.peer.call({{ strangerPeerID }}, stream);
+									window._activeCall = call;
 
 									call.on('stream', partnerStream => {
-										console.log("📹 VIDEO CALL: (caller) stream partnerStream accepted.");
-										if (remoteVideo) {
-											addVideoStream(remoteVideo, partnerStream);
-										}
-									})
+										addVideoStream(remoteVideo, partnerStream);
+									});
 
 									call.on('close', () => {
-										if (remoteVideo) {
-											remoteVideo.srcObject = null;
-										}
+										if (remoteVideo) remoteVideo.srcObject = null;
+										window._activeCall = null;
 									});
 
 									call.on('error', err => {
 										console.error("📹 VIDEO CALL: (caller) ", err);
 									});
-								}).catch(err => {
-									console.error("Failed to get local stream:", err);
 								});
-							}else{
-								let localStream = null;
-								navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-									.then(stream => {
-										window.localStream = stream;
-										localStream = stream;
-										addVideoStream(localVideo, stream);
-									}).catch(err => {
-										console.error("Failed to get local stream for receiver:", err);
-									});
-
+							} else {
 								console.log("📹 VIDEO CALL: waiting for call");
 								window.peer.on('call', call => {
 									console.log("📹 VIDEO CALL: received");
-
-									if (localStream) {
-										call.answer(localStream);
+									streamPromise.then(stream => {
+										if (!stream) return;
+										call.answer(stream);
+										window._activeCall = call;
 
 										call.on('stream', callerStream => {
-											if (remoteVideo) {
-												addVideoStream(remoteVideo, callerStream);
-											}
+											addVideoStream(remoteVideo, callerStream);
+										});
+
+										call.on('close', () => {
+											if (remoteVideo) remoteVideo.srcObject = null;
+											window._activeCall = null;
 										});
 
 										call.on('error', err => {
 											console.log("📹 VIDEO CALL: (receiver) ", err);
 										});
-									} else {
-										console.error("Call received, but local stream is not available to answer with.");
-									}
+									});
 								});
-							} // Callee logic
+							}
 						} // Setup video comm
 					} // Stranger ID existence/validity check
 				}) // Peer on 'open' event
