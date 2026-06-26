@@ -102,13 +102,13 @@ func ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video 
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div id=\"chat_inner\" class=\"grow\" hx-swap-oob=\"outerHTML\"><script>\n\t\t\t// This function sets up all event handlers for an active connection.\n\t\t\t// It's called by both the caller and the receiver once the connection is established.\n\t\t\tfunction setupChat(connection) {\n\t\t\t\tconsole.log('PeerJS DataConnection is open. Setting up chat handlers.');\n\t\t\t\tconst chatBubbles = document.querySelector(\"#chat_bubbles\");\n\t\t\t\t\n\t\t\t\t// Handle incoming data (messages from stranger)\n\t\t\t\tconnection.on('data', data => {\n\t\t\t\t\tnewChatBubble(data, false);\n\t\t\t\t});\n\n\t\t\t\tconst chatForm = document.querySelector(\"#chat_form\");\n\t\t\t\tconst textarea = chatForm.querySelector(\"#chat_message\");\n\t\t\t\tconst sendChatButton = document.querySelector(\"#send_chat_button\");\n\n\t\t\t\t// CRITICAL: To prevent multiple listeners on reconnect, clone the button to remove old listeners.\n\t\t\t\tconst newButton = sendChatButton.cloneNode(true);\n\t\t\t\tsendChatButton.parentNode.replaceChild(newButton, sendChatButton);\n\n\n\t\t\t\t// Handle outgoing data (sending a message)\n\t\t\t\tnewButton.addEventListener(\"click\", (e) => {\n\t\t\t\t\tconst message = textarea.value.trim();\n\n\t\t\t\t\tif (message) {\n\t\t\t\t\t\tnewChatBubble(message, true);\n\t\t\t\t\t\tconnection.send(message);\n\t\t\t\t\t\ttextarea.value = \"\";\n\t\t\t\t\t}\n\t\t\t\t});\n\n\t\t\t\ttextarea.addEventListener('keydown', e => {\n\t\t\t\t\tif(e.key == 'Enter' && !e.shiftKey){\n\t\t\t\t\t\te.preventDefault();\n\t\t\t\t\t\tnewButton.click();\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t\t\n\t\t\t}\n\n\t\t\tfunction newChatBubble(message, isMe) {\n\t\t\t\t    const wrapper = document.createElement(\"div\");\n\t\t\t\t    wrapper.classList.add(\"flex\", \"gap-1\", \"w-full\", \"text-sm\", \"sm:text-base\", isMe ? \"justify-end\" : \"justify-start\");\n\n\t\t\t\t    const innerWrapper = document.createElement(\"div\");\n\t\t\t\t    if (isMe) {\n\t\t\t\t\tinnerWrapper.classList.add(\"flex\", \"gap-2\", \"p-2\", \"rounded-lg\", \"max-w-xs\", \"bg-blue-500\", \"text-white\", \"min-w-0\");\n\t\t\t\t    } else {\n\t\t\t\t\tinnerWrapper.classList.add(\"flex\", \"gap-2\", \"p-2\", \"rounded-lg\", \"max-w-xs\", \"bg-gray-200\", \"text-gray-800\", \"min-w-0\");\n\t\t\t\t    }\n\n\t\t\t\t    const msg = document.createElement(\"p\");\n\t\t\t\t    msg.classList.add(\"break-all\", \"whitespace-pre-line\");\n\t\t\t\t    msg.innerText = message;\n\n\t\t\t\t    innerWrapper.append(msg);\n\t\t\t\t    wrapper.appendChild(innerWrapper);\n\n\t\t\t\t    const chatBubbles = document.querySelector(\"#chat_bubbles\");\n\t\t\t\t    chatBubbles.appendChild(wrapper);\n\t\t\t\t    wrapper.scrollIntoView({ block: \"end\", behavior: \"smooth\" });\n\t\t\t}\n\n\t\t\tfunction wsConnectedToPeerMessage() {\n\t\t\t\tconst chatSocket = window.socketWrapper;\n\t\t\t\tif (chatSocket) {\n\t\t\t\t\tchatSocket.send(JSON.stringify({ message_type: \"peer_connected\" }));\n\t\t\t\t\tconsole.log(\"Sent 'peer_connected' message via WebSocket.\");\n\t\t\t\t} else {\n\t\t\t\t\tconsole.error(\"Socket wrapper not found on window object.\");\n\t\t\t\t}\n\t\t\t}\n\n\t\t\tfunction wsEndConnectionMessage() {\n\t\t\t\tconst chatSocket = window.socketWrapper;\n\t\t\t\tif (chatSocket) {\n\t\t\t\t\tchatSocket.send(JSON.stringify({ message_type: \"end_connection\" }));\n\t\t\t\t\tconsole.log(\"Sent 'end_connection' message via WebSocket.\");\n\t\t\t\t} else {\n\t\t\t\t\tconsole.error(\"Socket wrapper not found on window object.\");\n\t\t\t\t}\n\t\t\t}\n\t\t</script><script>\n\t\t\t// TODO: maybe handle\n\t\t\t// Peer:           'close', 'disconnected' and 'error' events AND\n\t\t\t// DataConnection: 'close' and 'error' events gracefully\n\t\t\tif (window.peer) {\n\t\t\t\tconsole.log(\"Destroying previous Peer object.\");\n\t\t\t\twindow.peer.destroy();\n\t\t\t}\n\n\t\t\t// Use a single, persistent peer object. 'var' prevents re-declaration errors from HTMX swaps.\n\t\t\tif (")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div id=\"chat_inner\" class=\"grow\" hx-swap-oob=\"outerHTML\"><script>\n\t\t\t// This function sets up all event handlers for an active connection.\n\t\t\t// It's called by both the caller and the receiver once the connection is established.\n\t\t\tfunction setupChat(connection) {\n\t\t\t\tconsole.log('PeerJS DataConnection is open. Setting up chat handlers.');\n\t\t\t\tconst chatBubbles = document.querySelector(\"#chat_bubbles\");\n\t\t\t\t\n\t\t\t\t// Handle incoming data (messages from stranger)\n\t\t\t\tconnection.on('data', data => {\n\t\t\t\t\tnewChatBubble(data, false);\n\t\t\t\t});\n\n\t\t\t\tconst chatForm = document.querySelector(\"#chat_form\");\n\t\t\t\tconst textarea = chatForm.querySelector(\"#chat_message\");\n\t\t\t\tconst sendChatButton = document.querySelector(\"#send_chat_button\");\n\n\t\t\t\t// CRITICAL: To prevent multiple listeners on reconnect, clone the button to remove old listeners.\n\t\t\t\tconst newButton = sendChatButton.cloneNode(true);\n\t\t\t\tsendChatButton.parentNode.replaceChild(newButton, sendChatButton);\n\n\n\t\t\t\t// Handle outgoing data (sending a message)\n\t\t\t\tnewButton.addEventListener(\"click\", (e) => {\n\t\t\t\t\tconst message = textarea.value.trim();\n\n\t\t\t\t\tif (message) {\n\t\t\t\t\t\tnewChatBubble(message, true);\n\t\t\t\t\t\tconnection.send(message);\n\t\t\t\t\t\ttextarea.value = \"\";\n\t\t\t\t\t}\n\t\t\t\t});\n\n\t\t\t\ttextarea.addEventListener('keydown', e => {\n\t\t\t\t\tif(e.key == 'Enter' && !e.shiftKey){\n\t\t\t\t\t\te.preventDefault();\n\t\t\t\t\t\tnewButton.click();\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t\t\n\t\t\t}\n\n\t\t\tfunction newChatBubble(message, isMe) {\n\t\t\t\t    const wrapper = document.createElement(\"div\");\n\t\t\t\t    wrapper.classList.add(\"flex\", \"gap-1\", \"w-full\", \"text-sm\", \"sm:text-base\", isMe ? \"justify-end\" : \"justify-start\");\n\n\t\t\t\t    const innerWrapper = document.createElement(\"div\");\n\t\t\t\t    if (isMe) {\n\t\t\t\t\tinnerWrapper.classList.add(\"flex\", \"gap-2\", \"p-2\", \"rounded-lg\", \"max-w-xs\", \"bg-blue-500\", \"text-white\", \"min-w-0\");\n\t\t\t\t    } else {\n\t\t\t\t\tinnerWrapper.classList.add(\"flex\", \"gap-2\", \"p-2\", \"rounded-lg\", \"max-w-xs\", \"bg-gray-200\", \"text-gray-800\", \"min-w-0\");\n\t\t\t\t    }\n\n\t\t\t\t    const msg = document.createElement(\"p\");\n\t\t\t\t    msg.classList.add(\"break-all\", \"whitespace-pre-line\");\n\t\t\t\t    msg.innerText = message;\n\n\t\t\t\t    innerWrapper.append(msg);\n\t\t\t\t    wrapper.appendChild(innerWrapper);\n\n\t\t\t\t    const chatBubbles = document.querySelector(\"#chat_bubbles\");\n\t\t\t\t    chatBubbles.appendChild(wrapper);\n\t\t\t\t    wrapper.scrollIntoView({ block: \"end\", behavior: \"smooth\" });\n\t\t\t}\n\n\t\t\tfunction wsConnectedToPeerMessage() {\n\t\t\t\tconst chatSocket = window.socketWrapper;\n\t\t\t\tif (chatSocket) {\n\t\t\t\t\tchatSocket.send(JSON.stringify({ message_type: \"peer_connected\" }));\n\t\t\t\t\tconsole.log(\"Sent 'peer_connected' message via WebSocket.\");\n\t\t\t\t} else {\n\t\t\t\t\tconsole.error(\"Socket wrapper not found on window object.\");\n\t\t\t\t}\n\t\t\t}\n\n\t\t\tfunction wsEndConnectionMessage() {\n\t\t\t\tconst chatSocket = window.socketWrapper;\n\t\t\t\tif (chatSocket) {\n\t\t\t\t\tchatSocket.send(JSON.stringify({ message_type: \"end_connection\" }));\n\t\t\t\t\tconsole.log(\"Sent 'end_connection' message via WebSocket.\");\n\t\t\t\t} else {\n\t\t\t\t\tconsole.error(\"Socket wrapper not found on window object.\");\n\t\t\t\t}\n\t\t\t}\n\t\t</script><script>\n\t\t\tif (window.peer) {\n\t\t\t\tconsole.log(\"Destroying previous Peer object.\");\n\t\t\t\twindow.peer.destroy();\n\t\t\t}\n\n\t\t\t// Use a single, persistent peer object. 'var' prevents re-declaration errors from HTMX swaps.\n\t\t\tif (")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Var4, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(peerID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 128, Col: 16}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 125, Col: 16}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 		if templ_7745c5c3_Err != nil {
@@ -120,7 +120,7 @@ func ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video 
 		}
 		templ_7745c5c3_Var5, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(uuid.Nil)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 128, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 125, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
@@ -132,7 +132,7 @@ func ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video 
 		}
 		templ_7745c5c3_Var6, templ_7745c5c3_Err := templruntime.ScriptContentInsideStringLiteral(peerID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 129, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 126, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 		if templ_7745c5c3_Err != nil {
@@ -144,19 +144,19 @@ func ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video 
 		}
 		templ_7745c5c3_Var7, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(peerID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 131, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 128, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, ", {\n\t\t\t\t\t//host: \"192.168.115.47\",\n\t\t\t\t\thost: \"localhost\",\n\t\t\t\t\tport: 9000,\n\t\t\t\t\tdebug: 1,\n\t\t\t\t\tsecure: false,\n\t\t\t\t\tconfig: {\n\t\t\t\t\t\t'iceServers': [\n\t\t\t\t\t\t\t{ urls: \"stun:stun.l.google.com:19302\" },\n\t\t\t\t\t\t\t{ urls: \"turn:turn.bistri.com:80\", username: \"homeo\", credential: \"homeo\" }\n\t\t\t\t\t\t]\n\t\t\t\t\t}\n\t\t\t\t});\n\n\t\t\t\twindow.peer.on('error', err => {\n\t\t\t\t\tconsole.error('PeerJS error:', err.type, err);\n\t\t\t\t});\n\n\t\t\t\twindow.peer.on('disconnected', () => {\n\t\t\t\t\tconsole.error('PeerJS disconnected');\n\t\t\t\t\twsEndConnectionMessage()\n\t\t\t\t});\n\n\t\t\twindow.peer.on('open', id => {\n\t\t\t\t\tconsole.log('My peer ID is now registered with the server:', id);\n\n\t\t\t\t\t// We only try to connect if we have a strangerPeerID and a valid peer object.\n\t\t\t\t\tif (")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, ", {\n\t\t\t\t\t//host: \"192.168.115.47\",\n\t\t\t\t\thost: \"localhost\",\n\t\t\t\t\tport: 9000,\n\t\t\t\t\tdebug: 1,\n\t\t\t\t\tsecure: false,\n\t\t\t\t\tconfig: {\n\t\t\t\t\t\t'iceServers': [\n\t\t\t\t\t\t\t{ urls: \"stun:stun.l.google.com:19302\" },\n\t\t\t\t\t\t\t{ urls: \"turn:turn.bistri.com:80\", username: \"homeo\", credential: \"homeo\" }\n\t\t\t\t\t\t]\n\t\t\t\t\t}\n\t\t\t\t});\n\n\t\t\t\twindow.peer.on('error', err => {\n\t\t\t\t\tconsole.error('PeerJS error:', err.type, err);\n\t\t\t\t});\n\n\t\t\t\twindow.peer.on('disconnected', () => {\n\t\t\t\t\tconsole.error('PeerJS disconnected');\n\t\t\t\t});\n\n\t\t\twindow.peer.on('open', id => {\n\t\t\t\t\tconsole.log('My peer ID is now registered with the server:', id);\n\n\t\t\t\t\t// We only try to connect if we have a strangerPeerID and a valid peer object.\n\t\t\t\t\tif (")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Var8, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(strangerPeerID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 158, Col: 26}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 154, Col: 26}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 		if templ_7745c5c3_Err != nil {
@@ -168,7 +168,7 @@ func ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video 
 		}
 		templ_7745c5c3_Var9, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(uuid.Nil)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 158, Col: 45}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 154, Col: 45}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -180,7 +180,7 @@ func ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video 
 		}
 		templ_7745c5c3_Var10, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(isCaller)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 159, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 155, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 		if templ_7745c5c3_Err != nil {
@@ -192,7 +192,7 @@ func ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video 
 		}
 		templ_7745c5c3_Var11, templ_7745c5c3_Err := templruntime.ScriptContentInsideStringLiteral(strangerPeerID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 164, Col: 75}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 160, Col: 75}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 		if templ_7745c5c3_Err != nil {
@@ -204,7 +204,7 @@ func ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video 
 		}
 		templ_7745c5c3_Var12, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(strangerPeerID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 166, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 162, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 		if templ_7745c5c3_Err != nil {
@@ -216,7 +216,7 @@ func ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video 
 		}
 		templ_7745c5c3_Var13, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(video)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 190, Col: 18}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 186, Col: 18}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 		if templ_7745c5c3_Err != nil {
@@ -228,7 +228,7 @@ func ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video 
 		}
 		templ_7745c5c3_Var14, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(strangerPeerID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 210, Col: 56}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/chat.templ`, Line: 206, Col: 56}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 		if templ_7745c5c3_Err != nil {
