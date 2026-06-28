@@ -35,7 +35,7 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 			// This function sets up all event handlers for an active connection.
 			// It's called by both the caller and the receiver once the connection is established.
 			function setupChat(connection) {
-				console.log('PeerJS DataConnection is open. Setting up chat handlers.');
+				console.info('PeerJS DataConnection is open. Setting up chat handlers.');
 				const chatBubbles = document.querySelector("#chat_bubbles");
 				
 				// Handle incoming data (messages from stranger)
@@ -51,11 +51,9 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 				const newButton = sendChatButton.cloneNode(true);
 				sendChatButton.parentNode.replaceChild(newButton, sendChatButton);
 
-
 				// Handle outgoing data (sending a message)
 				newButton.addEventListener("click", (e) => {
 					const message = textarea.value.trim();
-
 					if (message) {
 						newChatBubble(message, true);
 						connection.send(message);
@@ -69,7 +67,6 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 						newButton.click();
 					}
 				});
-				
 			}
 
 			function newChatBubble(message, isMe) {
@@ -96,28 +93,25 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 			}
 
 			function wsConnectedToPeerMessage() {
-				const chatSocket = window.socketWrapper;
-				if (chatSocket) {
-					chatSocket.send(JSON.stringify({ message_type: "peer_connected" }));
-					console.log("Sent 'peer_connected' message via WebSocket.");
-				} else {
+				if (!window.socketWrapper) {
 					console.error("Socket wrapper not found on window object.");
+					return;
 				}
+				
+				window.socketWrapper.send(JSON.stringify({ message_type: "peer_connected" }));
 			}
 		</script>
 		<script>
+			window.MAX_CONNECT_RETRIES = 3;
+			window.MAX_RECONNECT_ATTEMPTS = 3;
+
 			if (window.peer) {
-				console.log("Destroying previous Peer object.");
+				console.info("Destroying previous Peer object.");
 				window.peer.destroy();
 			}
 
-			if (window.localStream) {
-				console.log("Stopping previous media stream.");
-				window.localStream.getTracks().forEach(t => t.stop());
-				window.localStream = null;
-			}
-
 			if (window._activeCall) {
+				console.info("Closing previous call.");
 				window._activeCall.close();
 				window._activeCall = null;
 			}
@@ -127,7 +121,6 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 				window._reconnectAttempts = 0;
 				window._peerConnectRetries = 0;
 
-				console.log("Creating new Peer object with ID:", "{{ peerID }}");
 				const currentPeer = new Peer({{ peerID }}, {
 					//host: "192.168.115.47",
 					host: "localhost",
@@ -141,16 +134,18 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 						]
 					}
 				});
+
 				window.peer = currentPeer;
 
 				currentPeer.on('error', err => {
+					// window.peer was replaced by a newer ChatInner swap; ignore stale events
 					if (window.peer !== currentPeer) return;
-					console.error('PeerJS error:', err.type, err);
 
 					// retry logic if the callee is not yet setup and is unavailable
 					if (err.type === 'peer-unavailable' && isCaller) {
+						console.error('Peer unable to connect with match, retrying to connect...');
 						window._peerConnectRetries++;
-						if (window._peerConnectRetries <= 3) {
+						if (window._peerConnectRetries <= window.MAX_CONNECT_RETRIES) {
 							setTimeout(() => {
 								if (window.peer === currentPeer) {
 									var newConn = currentPeer.connect({{ strangerPeerID }});
@@ -166,42 +161,39 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 				});
 
 				currentPeer.on('disconnected', () => {
+					// window.peer was replaced by a newer ChatInner swap; ignore stale events
 					if (window.peer !== currentPeer) return;
-					console.error('PeerJS disconnected, attempting reconnect...');
+
+					console.error('Peer disconnected, attempting reconnect...');
 					window._reconnectAttempts++;
-					if (window._reconnectAttempts <= 3) {
+					if (window._reconnectAttempts <= window.MAX_RECONNECT_ATTEMPTS) {
 						currentPeer.reconnect();
 					}
 				});
 
 				window.peer.on('open', id => {
-					console.log('My peer ID is now registered with the server:', id);
+					console.info('My peer ID is now registered with the server:', id);
 
 					// We only try to connect if we have a strangerPeerID and a valid peer object.
 					if ({{ strangerPeerID }} !== {{ uuid.Nil }}) {
-						var conn = null;
-			
 						// Setup text comm
 						if (isCaller) {
-							console.debug("Acting as CALLER. Connecting to:", "{{ strangerPeerID }}");
+							console.debug("Acting as CALLER. Connecting to:", { stranger: "{{ strangerPeerID }}" });
+							const conn = window.peer.connect({{ strangerPeerID }});
 
-							conn = window.peer.connect({{ strangerPeerID }});
-
-							conn.on('error', err => console.error('Connection error (caller):', err));
+							conn.on('error', err => console.error('Connection error (caller):', {err}));
 							conn.on('open', () => {
 								wsConnectedToPeerMessage()
 								setupChat(conn);
 							});
 
 						} else {
-							console.log("Acting as RECEIVER. Waiting for connection...");
+							console.debug("Acting as RECEIVER. Waiting for connection...");
+							window.peer.on('connection', (conn) => {
+								console.debug("Incoming connection received.");
 
-							window.peer.on('connection', (connection) => {
-								console.log("Incoming connection received.");
-								conn = connection;
-
-								conn.on('error', err => console.error('Connection error (receiver):', err));
-								 conn.on('open', () => {
+								conn.on('error', err => console.error('Connection error (receiver):', {err}));
+								conn.on('open', () => {
 									wsConnectedToPeerMessage()
 									setupChat(conn);
 								});
@@ -221,18 +213,24 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 							const localVideo = document.querySelector("#local_video");
 							const remoteVideo = document.querySelector("#remote_video");
 
-							const streamPromise = navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-								.then(stream => {
-									window.localStream = stream;
-									addVideoStream(localVideo, stream);
-									return stream;
-								})
-								.catch(err => {
-									console.error("Failed to get local stream:", err);
-								});
+							// Try to re-use our previous local stream if it exists
+							const streamPromise = window.localStream
+								? Promise.resolve(window.localStream)
+								: navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+									.then(stream => {
+										window.localStream = stream;
+										return stream;
+									})
+									.catch(err => {
+										console.error("Failed to get local stream:", err);
+									});
+
+							streamPromise.then(stream => {
+								if (stream) addVideoStream(localVideo, stream);
+							});
 
 							if (isCaller) {
-								console.log("📹 VIDEO CALL: initiated");
+								console.debug("📹 VIDEO CALL: initiated");
 								streamPromise.then(stream => {
 									if (!stream) return;
 									const call = window.peer.call({{ strangerPeerID }}, stream);
@@ -248,17 +246,17 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 									});
 
 									call.on('error', err => {
-										console.error("📹 VIDEO CALL: (caller) ", err);
+										console.error("📹 VIDEO CALL: (caller) ", { err });
 									});
 								});
 							} else {
-								console.log("📹 VIDEO CALL: waiting for call");
+								console.debug("📹 VIDEO CALL: waiting for call");
 								window.peer.on('call', call => {
 									console.log("📹 VIDEO CALL: received");
+									window._activeCall = call;
 									streamPromise.then(stream => {
 										if (!stream) return;
 										call.answer(stream);
-										window._activeCall = call;
 
 										call.on('stream', callerStream => {
 											addVideoStream(remoteVideo, callerStream);
@@ -270,7 +268,7 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 										});
 
 										call.on('error', err => {
-											console.log("📹 VIDEO CALL: (receiver) ", err);
+											console.error("📹 VIDEO CALL: (receiver) ", { err });
 										});
 									});
 								});
