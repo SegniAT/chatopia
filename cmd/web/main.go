@@ -52,10 +52,8 @@ func main() {
 	}
 
 	app.hub.Start()
-	slog.Info("Hub started")
 
 	err = app.serve()
-
 	if err != nil {
 		slog.Error(err.Error())
 	}

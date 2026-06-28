@@ -61,8 +61,7 @@ func (app *application) chatPost(w http.ResponseWriter, r *http.Request) {
 	err := app.hub.RegisterClient(client)
 	if err != nil {
 		slog.ErrorContext(r.Context(), "failed to register client with Hub", slog.String("error", err.Error()))
-		// TODO: think of a better way to handle errors
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 
@@ -82,8 +81,7 @@ func (app *application) chat(w http.ResponseWriter, r *http.Request) {
 
 	client, ok := app.hub.GetClient(sessionId)
 	if !ok {
-		w.Header().Set("HX-Redirect", "/")
-		w.WriteHeader(http.StatusSeeOther)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 
@@ -96,8 +94,7 @@ func (app *application) ServeWs(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		slog.ErrorContext(r.Context(), "serveWs error", slog.String("error", err.Error()))
-		w.Header().Set("HX-Redirect", "/")
-		w.WriteHeader(http.StatusSeeOther)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 
@@ -105,8 +102,7 @@ func (app *application) ServeWs(w http.ResponseWriter, r *http.Request) {
 
 	client, ok := app.hub.GetClient(sessionId)
 	if !ok {
-		w.Header().Set("HX-Redirect", "/")
-		w.WriteHeader(http.StatusSeeOther)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 
