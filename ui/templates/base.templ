@@ -2,7 +2,7 @@ package templates
 
 import "time"
 
-templ Base(title string) {
+templ Base(title string, liveUsers int64) {
 	<!DOCTYPE html>
 	<html class="h-full">
 		<head>
@@ -39,7 +39,7 @@ templ Base(title string) {
 				});
 			</script>
 			<header>
-				@Navigation()
+				@Navigation(liveUsers)
 			</header>
 			<main class="grow flex flex-col min-h-0">
 				{ children... }
@@ -51,7 +51,7 @@ templ Base(title string) {
 	</html>
 }
 
-templ Navigation() {
+templ Navigation(liveUsers int64) {
 	<nav class="text-xl">
 		<ul class="flex flex-col [@media(min-width:280px)]:flex-row [@media(min-width:280px)]:items-center [@media(min-width:280px)]:justify-between gap-2 border-b border-b-chatopia-3 p-4">
 			<li>
@@ -61,7 +61,7 @@ templ Navigation() {
 			</li>
 			<div class="flex gap-4">
 				<li>
-					@LiveUsers(0)
+					@LiveUsers(liveUsers)
 				</li>
 				<li><a class="hover:text-chatopia-1 text-sm sm:text-base" href="/about">About</a></li>
 			</div>

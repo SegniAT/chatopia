@@ -25,7 +25,7 @@ func (app *application) ping(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	component := templates.Home("Home", false, []string{})
+	component := templates.Home("Home", false, []string{}, app.hub.ClientCount())
 	component.Render(r.Context(), w)
 }
 
@@ -88,7 +88,7 @@ func (app *application) chat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	chatType := client.ChatType
-	component := templates.Chat(fmt.Sprintf("Chat | %s", strings.ToUpper(chatType)), chatType == "video", client.Interests)
+	component := templates.Chat(fmt.Sprintf("Chat | %s", strings.ToUpper(chatType)), chatType == "video", client.Interests, app.hub.ClientCount())
 	component.Render(r.Context(), w)
 }
 

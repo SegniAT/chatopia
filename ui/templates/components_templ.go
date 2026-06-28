@@ -342,13 +342,7 @@ func InterestPill(interest string) templ.Component {
 	})
 }
 
-/*
-hx-get="/live_users"
-hx-trigger="every 10s"
-hx-swap-oob="true"
-*/
-
-func LiveUsers(users int) templ.Component {
+func LiveUsers(users int64) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -369,14 +363,14 @@ func LiveUsers(users int) templ.Component {
 			templ_7745c5c3_Var13 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div id=\"live_users\" class=\"relative flex items-center gap-1 text-base sm:text-2xl bg-chatopia-3/90 px-2 py-1 rounded-sm\"><!-- Dot positioned inside top-left of the div --><span class=\"absolute top-0 left-0 mt-1 ml-1 flex h-2 w-2 sm:h-3 sm:w-3\"><span class=\"animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75\"></span> <span class=\"relative inline-flex rounded-full h-2 w-2 sm:h-3 sm:w-3 bg-red-500\"></span></span><!-- User count and \"live\" text --><div class=\"flex items-center gap-1 ml-3\"><span class=\"text-base sm:text-lg font-semibold\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div id=\"live_users\" class=\"relative flex items-center gap-1 text-base sm:text-2xl bg-chatopia-3/90 px-2 py-1 rounded-sm\" hx-get=\"/live_users\" hx-trigger=\"every 10s\" hx-swap-oob=\"true\"><!-- Dot positioned inside top-left of the div --><span class=\"absolute top-0 left-0 mt-1 ml-1 flex h-2 w-2 sm:h-3 sm:w-3\"><span class=\"animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75\"></span> <span class=\"relative inline-flex rounded-full h-2 w-2 sm:h-3 sm:w-3 bg-red-500\"></span></span><!-- User count and \"live\" text --><div class=\"flex items-center gap-1 ml-3\"><span class=\"text-base sm:text-lg font-semibold\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", users))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/components.templ`, Line: 151, Col: 78}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/components.templ`, Line: 148, Col: 78}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {

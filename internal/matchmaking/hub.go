@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/SegniAT/internal/redis"
@@ -25,6 +26,8 @@ const matchTimeout = 30 * time.Second
 type Hub struct {
 	// clients stores online clients.
 	clients sync.Map
+
+	clientCount atomic.Int64
 
 	RedisClient *redis.Client
 	Notifier    *redis.Notifier
@@ -52,6 +55,15 @@ func NewHub(ctx context.Context, redisClient *redis.Client) *Hub {
 	}
 }
 
+func (h *Hub) GetClient(sessionID string) (*Client, bool) {
+	val, ok := h.clients.Load(sessionID)
+	if !ok {
+		return nil, false
+	}
+
+	return val.(*Client), true
+}
+
 func (h *Hub) RegisterClient(client *Client) error {
 	if client == nil {
 		return fmt.Errorf("can't register nil client")
@@ -67,21 +79,13 @@ func (h *Hub) RegisterClient(client *Client) error {
 		}
 	}
 
+	h.clientCount.Add(1)
 	slog.Info("client registered",
 		slog.String("session_id", client.SessionID),
 		slog.String("chat_type", client.ChatType),
 	)
 
 	return nil
-}
-
-func (h *Hub) GetClient(sessionID string) (*Client, bool) {
-	val, ok := h.clients.Load(sessionID)
-	if !ok {
-		return nil, false
-	}
-
-	return val.(*Client), true
 }
 
 func (h *Hub) UnregisterClient(client *Client) error {
@@ -116,17 +120,12 @@ func (h *Hub) UnregisterClient(client *Client) error {
 		slog.String("session_id", client.SessionID),
 	)
 
+	h.clientCount.Add(-1)
 	return nil
 }
 
-func (h *Hub) ClientCount() int {
-	count := 0
-	h.clients.Range(func(_, _ any) bool {
-		count++
-		return true
-	})
-
-	return count
+func (h *Hub) ClientCount() int64 {
+	return h.clientCount.Load()
 }
 
 func (h *Hub) Start() {
