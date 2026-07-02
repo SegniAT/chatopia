@@ -100,6 +100,14 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 				
 				window.socketWrapper.send(JSON.stringify({ message_type: "peer_connected" }));
 			}
+
+			function showError(msg) {
+				const el = document.getElementById("error_message");
+				if (el) {
+					document.getElementById("error_text").innerText = msg;
+					el.classList.remove("hidden");
+				}
+			}
 		</script>
 		<script>
 			window.MAX_CONNECT_RETRIES = 3;
@@ -156,6 +164,8 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 									});
 								}
 							}, 1000 * window._peerConnectRetries);
+						} else {
+							showError("Could not connect to stranger. Click New Chat to try again.");
 						}
 					}
 				});
@@ -222,6 +232,7 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 									})
 									.catch(err => {
 										console.error("Failed to get local stream:", err);
+										showError("Camera or microphone access denied. Please allow permissions and try again.");
 									});
 
 							streamPromise.then(stream => {
@@ -280,6 +291,10 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 				}) // Peer on 'open' event
 			} // Peer ID existence/validity check
 		</script>
+		<div id="error_message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-2">
+			<span id="error_text"></span>
+			<button onclick="this.parentElement.classList.add('hidden')" class="float-right font-bold">&times;</button>
+		</div>
 		<div class="flex flex-col sm:flex-row py-4 gap-2">
 			if video {
 				<div class="">
