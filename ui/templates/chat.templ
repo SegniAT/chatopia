@@ -204,7 +204,6 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 						if ({{ video }}) {
 							function addVideoStream(videoElement, stream) {
 								videoElement.srcObject = stream
-								videoElement.style.transform = 'scaleX(-1)';
 								videoElement.addEventListener('loadedmetadata', () => {
 									videoElement.play();
 								});
@@ -226,7 +225,10 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 									});
 
 							streamPromise.then(stream => {
-								if (stream) addVideoStream(localVideo, stream);
+								if (stream) {
+									addVideoStream(localVideo, stream);
+									localVideo.style.transform = 'scaleX(-1)';
+								}
 							});
 
 							if (isCaller) {
