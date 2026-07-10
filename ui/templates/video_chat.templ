@@ -5,10 +5,18 @@ templ VideoChat() {
 	</script>
 	<div class="flex justify-center sm:flex-col gap-2">
 		<div>
-			<video id="remote_video" class="h-50 w-50 sm:h-80 sm:w-80 border-2 rounded-md border-chatopia-3" autoplay muted style="object-fit: cover; background-image: url('/assets/video_placeholder.gif'); background-size: cover; background-position: center; background-repeat: no-repeat;"></video>
+			<video id="remote_video" class="h-36 w-36 sm:h-80 sm:w-80 border-2 rounded-md border-chatopia-3" autoplay style="object-fit: cover; background-image: url('/assets/video_placeholder.gif'); background-size: cover; background-position: center; background-repeat: no-repeat;"></video>
 		</div>
-		<div>
-			<video id="local_video" class="h-50 w-50 sm:h-80 sm:w-80 border-2 rounded-md border-chatopia-3" autoplay muted style="object-fit: cover;"></video>
+		<div class="relative">
+			<video id="local_video" class="h-36 w-36 sm:h-80 sm:w-80 border-2 rounded-md border-chatopia-3" autoplay muted style="object-fit: cover;"></video>
+			<div id="local_video_ctrl" class="absolute bottom-2 m:bottom-8 left-1/2 -translate-x-1/2 flex gap-2 mt-1 justify-center">
+				<button id="mute_button" onclick="toggleMute()" class="flex items-center justify-center w-8 h-8">
+					<svg class="w-5 h-5 fill-white"><use href="/assets/icons.svg#mic-on"></use></svg>
+				</button>
+				<button id="camera_button" onclick="toggleCamera()" class="flex items-center justify-center w-8 h-8">
+					<svg class="w-5 h-5 fill-white"><use href="/assets/icons.svg#cam-on"></use></svg>
+				</button>
+			</div>
 		</div>
 	</div>
 }

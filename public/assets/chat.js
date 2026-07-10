@@ -117,8 +117,7 @@ function initChat() {
 					.then(stream => {
 						window.localStream = stream;
 						return stream;
-					})
-					.catch(err => {
+					}).catch(err => {
 						console.error("Failed to get local stream:", err);
 						showError("Camera or microphone access denied. Please allow permissions and try again.");
 					});
@@ -127,6 +126,7 @@ function initChat() {
 				if (!stream) return;
 				addVideoStream(localVideo, stream);
 				localVideo.style.transform = 'scaleX(-1)';
+				syncMediaButtons();
 			});
 
 			if (isCaller) {
@@ -253,4 +253,39 @@ function addVideoStream(videoElement, stream) {
 	videoElement.addEventListener('loadedmetadata', () => {
 		videoElement.play();
 	});
+}
+
+function syncMediaButtons() {
+	const audioTrack = window.localStream?.getAudioTracks()[0];
+	const muteBtn = document.getElementById("mute_button");
+	if (muteBtn && audioTrack) {
+		muteBtn.innerHTML = `<svg class="w-5 h-5 fill-white"><use href="/assets/icons.svg#${audioTrack.enabled ? "mic-on" : "mic-off"}"></use></svg>`;
+	}
+
+	const videoTrack = window.localStream?.getVideoTracks()[0];
+	const camBtn = document.getElementById("camera_button");
+	if (camBtn && videoTrack) {
+		camBtn.innerHTML = `<svg class="w-5 h-5 fill-white"><use href="/assets/icons.svg#${videoTrack.enabled ? "cam-on" : "cam-off"}"></use></svg>`;
+	}
+}
+
+function toggleMute() {
+	const track = window.localStream?.getAudioTracks()[0];
+	if (!track) return;
+	track.enabled = !track.enabled;
+	syncMediaButtons();
+}
+
+function toggleCamera() {
+	const track = window.localStream?.getVideoTracks()[0];
+	if (!track) return;
+	track.enabled = !track.enabled;
+
+	// to remove the last freezed frame from the video element
+	const localVideo = document.getElementById("local_video");
+	if (localVideo) {
+		localVideo.srcObject = track.enabled ? window.localStream : null;
+	}
+
+	syncMediaButtons();
 }
