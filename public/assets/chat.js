@@ -113,7 +113,18 @@ function initChat() {
 			// Use previous stream if available.
 			const streamPromise = window.localStream
 				? Promise.resolve(window.localStream)
-				: navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+				: navigator.mediaDevices.getUserMedia({
+					video: {
+						width: { ideal: 640 },
+						height: { ideal: 480 },
+						frameRate: { ideal: 30 }
+					},
+					audio: {
+						echoCancellation: true,
+						noiseSuppression: true,
+						autoGainControl: true
+					}
+				})
 					.then(stream => {
 						window.localStream = stream;
 						return stream;
