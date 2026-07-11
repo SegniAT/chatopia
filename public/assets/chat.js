@@ -149,6 +149,7 @@ function initChat() {
 
 					call.on('stream', partnerStream => {
 						addVideoStream(remoteVideo, partnerStream);
+						syncMediaButtonsRemote();
 					});
 
 					call.on('close', () => {
@@ -171,6 +172,7 @@ function initChat() {
 
 						call.on('stream', callerStream => {
 							addVideoStream(remoteVideo, callerStream);
+							syncMediaButtonsRemote();
 						});
 
 						call.on('close', () => {
@@ -293,10 +295,37 @@ function toggleCamera() {
 	track.enabled = !track.enabled;
 
 	// to remove the last freezed frame from the video element
-	const localVideo = document.getElementById("local_video");
+	const localVideo = document.querySelector("#local_video");
 	if (localVideo) {
 		localVideo.srcObject = track.enabled ? window.localStream : null;
 	}
 
 	syncMediaButtons();
+}
+
+function syncMediaButtonsRemote() {
+	let isMuted = window._remoteMuted;
+	if (typeof isMuted == "undefined") {
+		isMuted = true;
+		window._remoteMuted = true;
+	}
+
+	const remoteVideo = document.querySelector("#remote_video");
+	if (!remoteVideo) return;
+
+	remoteVideo.muted = isMuted;
+
+	const remoteMuteBtn = document.querySelector("#remote_mute_button");
+	if (!remoteMuteBtn) return;
+
+	remoteMuteBtn.innerHTML = `<svg class="w-5 h-5 fill-white"><use href="/assets/icons.svg#${isMuted ? "muted" : "unmuted"}"></use></svg>`;
+}
+
+function toggleMuteRemote() {
+	const remoteVideo = document.querySelector("#remote_video");
+	if (!remoteVideo) return;
+
+	remoteVideo.muted = !remoteVideo.muted;
+	window._remoteMuted = remoteVideo.muted;
+	syncMediaButtonsRemote()
 }
