@@ -149,11 +149,14 @@ function initChat() {
 
 					call.on('stream', partnerStream => {
 						addVideoStream(remoteVideo, partnerStream);
+						window._remoteAudioCtx = startRemoteAudioMonitor(partnerStream);
 						syncMediaButtonsRemote();
 					});
 
 					call.on('close', () => {
 						if (remoteVideo) remoteVideo.srcObject = null;
+						window._remoteAudioCtx?.close();
+						window._remoteAudioCtx = null;
 						window._activeCall = null;
 					});
 
@@ -172,11 +175,14 @@ function initChat() {
 
 						call.on('stream', callerStream => {
 							addVideoStream(remoteVideo, callerStream);
+							window._remoteAudioCtx = startRemoteAudioMonitor(callerStream);
 							syncMediaButtonsRemote();
 						});
 
 						call.on('close', () => {
 							if (remoteVideo) remoteVideo.srcObject = null;
+							window._remoteAudioCtx?.close();
+							window._remoteAudioCtx = null;
 							window._activeCall = null;
 						});
 
@@ -272,13 +278,13 @@ function syncMediaButtons() {
 	const audioTrack = window.localStream?.getAudioTracks()[0];
 	const muteBtn = document.getElementById("mute_button");
 	if (muteBtn && audioTrack) {
-		muteBtn.innerHTML = `<svg class="w-5 h-5 fill-white"><use href="/assets/icons.svg#${audioTrack.enabled ? "mic-on" : "mic-off"}"></use></svg>`;
+		muteBtn.innerHTML = `<svg class="w-5 h-5 fill-white drop-shadow-[0_0_3px_black]"><use href="/assets/icons.svg#${audioTrack.enabled ? "mic-on" : "mic-off"}"></use></svg>`;
 	}
 
 	const videoTrack = window.localStream?.getVideoTracks()[0];
 	const camBtn = document.getElementById("camera_button");
 	if (camBtn && videoTrack) {
-		camBtn.innerHTML = `<svg class="w-5 h-5 fill-white"><use href="/assets/icons.svg#${videoTrack.enabled ? "cam-on" : "cam-off"}"></use></svg>`;
+		camBtn.innerHTML = `<svg class="w-5 h-5 fill-white drop-shadow-[0_0_3px_black]"><use href="/assets/icons.svg#${videoTrack.enabled ? "cam-on" : "cam-off"}"></use></svg>`;
 	}
 }
 
@@ -318,7 +324,7 @@ function syncMediaButtonsRemote() {
 	const remoteMuteBtn = document.querySelector("#remote_mute_button");
 	if (!remoteMuteBtn) return;
 
-	remoteMuteBtn.innerHTML = `<svg class="w-5 h-5 fill-white"><use href="/assets/icons.svg#${isMuted ? "muted" : "unmuted"}"></use></svg>`;
+	remoteMuteBtn.innerHTML = `<svg class="w-5 h-5 fill-white drop-shadow-[0_0_3px_black]"><use href="/assets/icons.svg#${isMuted ? "muted" : "unmuted"}"></use></svg>`;
 }
 
 function toggleMuteRemote() {
@@ -328,4 +334,46 @@ function toggleMuteRemote() {
 	remoteVideo.muted = !remoteVideo.muted;
 	window._remoteMuted = remoteVideo.muted;
 	syncMediaButtonsRemote()
+}
+
+function startRemoteAudioMonitor(stream) {
+	// Create an invisible audio processing pipeline.
+	const audioCtx = new AudioContext();
+	const source = audioCtx.createMediaStreamSource(stream);
+	const analyser = audioCtx.createAnalyser();
+
+	// 256 is small — good enough for volume detection, low CPU cost.
+	analyser.fftSize = 256;
+
+	source.connect(analyser);
+
+	const indicator = document.getElementById("remote_volume_indicator");
+
+	// frequencyBinCount = fftSize / 2 = 128.
+	// This array holds the volume (0–255) for each frequency band.
+	// Band 0 = bass, band 127 = high treble.
+	const data = new Uint8Array(analyser.frequencyBinCount);
+
+	// tick() runs once per frame (~60fps), synced to the screen refresh.
+	function tick() {
+		// Fill the array with current frequency data from the analyser.
+		analyser.getByteFrequencyData(data);
+
+		// Average all frequency bands into a single 0–255 number.
+		// Silence ≈ 0, talking ≈ 10–80, loud ≈ 80+.
+		let sum = 0;
+		for (let i = 0; i < data.length; i++) sum += data[i];
+		const avg = sum / data.length;
+
+		// Clamp avg to 0–80 range, then map to opacity 0.15–1.0.
+		const t = Math.min(1, avg / 80);
+		if (indicator) indicator.style.opacity = 0.15 + t * 0.85;
+
+		// Schedule this function to run again on the next frame.
+		requestAnimationFrame(tick);
+	}
+
+	tick();
+
+	return audioCtx;
 }
