@@ -10,7 +10,7 @@ import (
 
 func (app *application) routes() http.Handler {
 	// TODO: app.rateLimit
-	standardMiddleware := alice.New(app.addRequestID, app.session.Enable, app.recoverPanic, app.logRequest, app.disableCacheInDevMode)
+	standardMiddleware := alice.New(metricsMiddleware, app.addRequestID, app.session.Enable, app.recoverPanic, app.logRequest, app.disableCacheInDevMode)
 	dynamicMiddleware := alice.New(app.authenticate, app.requireAuthentication)
 	mux := http.NewServeMux()
 
@@ -34,6 +34,10 @@ func (app *application) routes() http.Handler {
 	mux.Handle("GET /assets/", http.StripPrefix("/assets", http.FileServer(http.FS(assetsFS))))
 
 	mux.Handle("GET /ping", standardMiddleware.ThenFunc(app.ping))
+
+	mux.Handle("GET /metrics", metricsHandler())
+
+	mux.Handle("GET /favicon.ico", http.RedirectHandler("/assets/favicon.ico", http.StatusMovedPermanently))
 
 	return mux
 }

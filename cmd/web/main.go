@@ -38,6 +38,8 @@ func main() {
 
 	defer redisClient.Close()
 
+	go startQueueDepthPoller(context.Background(), redisClient)
+
 	slog.Info("connected to redis", "addr", cfg.redisEnv)
 
 	session := sessions.New([]byte(cfg.secret))

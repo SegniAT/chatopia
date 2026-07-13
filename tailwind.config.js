@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./ui/templates/*.templ"],
+  content: ["./ui/templates/*.templ", "./public/assets/chat.js"],
   theme: {
     extend: {
       colors: {

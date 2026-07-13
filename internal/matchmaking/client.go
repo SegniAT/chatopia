@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/SegniAT/internal/metrics"
 	"github.com/gorilla/websocket"
 )
 
@@ -25,6 +26,9 @@ type Client struct {
 	ChatType    string   `json:"chat_type"`
 	IsStrict    bool     `json:"is_strict"`
 	Interests   []string `json:"interests"`
+
+	ConnStartedAt time.Time `json:"-"`
+	ChatStartedAt time.Time `json:"-"`
 }
 
 func (c Client) LogValue() slog.Value {
@@ -58,7 +62,6 @@ func (client *Client) IsActive() bool {
 }
 
 func (client *Client) ReadPump() {
-	defer client.Hub.clientWg.Done()
 	defer func() {
 		err := client.Hub.UnregisterClient(client)
 		if err != nil {
@@ -91,6 +94,7 @@ func (client *Client) ReadPump() {
 				return
 			}
 
+			metrics.WSMessagesTotal.WithLabelValues("received").Inc()
 			message.From = client
 			client.Hub.receive <- message
 		}
@@ -98,7 +102,6 @@ func (client *Client) ReadPump() {
 }
 
 func (client *Client) WritePump() {
-	defer client.Hub.clientWg.Done()
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
@@ -115,6 +118,8 @@ func (client *Client) WritePump() {
 			slog.Info("closing WritePump (HUB context cancellation)")
 			return
 		case message, ok := <-client.send:
+			metrics.WSMessagesTotal.WithLabelValues("sent").Inc()
+
 			client.Conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				_ = client.Conn.WriteMessage(websocket.CloseMessage, []byte{})

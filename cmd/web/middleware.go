@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
+	"runtime/debug"
 
 	"github.com/SegniAT/logger"
 	"github.com/google/uuid"
@@ -37,7 +39,8 @@ func (app *application) recoverPanic(next http.Handler) http.Handler {
 		defer func() {
 			if err := recover(); err != nil {
 				w.Header().Set("Connection", "close")
-				slog.ErrorContext(r.Context(), "panic", slog.Any("err", err))
+				slog.ErrorContext(r.Context(), "panic", slog.String("err", fmt.Sprintf("%+v", err)))
+				debug.PrintStack()
 			}
 		}()
 
