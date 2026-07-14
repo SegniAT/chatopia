@@ -5,6 +5,3 @@ scrape_configs:
   - job_name: chatopia
     static_configs:
       - targets: [web:4000]
-  - job_name: prometheus
-    static_configs:
-      - targets: [localhost:9090]

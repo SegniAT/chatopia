@@ -5,8 +5,8 @@
     "name": "adfw5nh",
     "namespace": "default",
     "uid": "28c9405c-d337-4c82-8eeb-ec8fee949a39",
-    "resourceVersion": "1784011571661007",
-    "generation": 29,
+    "resourceVersion": "1784025962408982",
+    "generation": 30,
     "creationTimestamp": "2026-07-14T01:55:57Z",
     "labels": {
       "grafana.app/deprecatedInternalID": "688715107028992"
@@ -16,7 +16,7 @@
       "grafana.app/folder": "",
       "grafana.app/saved-from-ui": "Grafana v13.1.0 (b309c9bb3b)",
       "grafana.app/updatedBy": "user:efrzmhwjc99fkb",
-      "grafana.app/updatedTimestamp": "2026-07-14T06:46:11Z"
+      "grafana.app/updatedTimestamp": "2026-07-14T10:46:02Z"
     }
   },
   "spec": {
@@ -1839,7 +1839,7 @@
                       "spec": {
                         "editorMode": "code",
                         "expr": "group by(page) (rate(visits_total[$__rate_interval]))",
-                        "legendFormat": "__auto",
+                        "legendFormat": "{{page}}",
                         "range": true
                       }
                     },
@@ -1854,32 +1854,27 @@
           },
           "vizConfig": {
             "kind": "VizConfig",
-            "group": "barchart",
+            "group": "timeseries",
             "version": "13.1.0",
             "spec": {
               "options": {
-                "barRadius": 0.05,
-                "barWidth": 0.95,
-                "fullHighlight": false,
-                "groupWidth": 0.8,
+                "annotations": {
+                  "clustering": -1,
+                  "multiLane": false
+                },
                 "legend": {
                   "calcs": [],
                   "displayMode": "list",
+                  "enableFacetedFilter": false,
                   "overflow": "ellipsis",
                   "placement": "bottom",
                   "showLegend": true
                 },
-                "orientation": "auto",
-                "showValue": "auto",
-                "stacking": "none",
                 "tooltip": {
                   "hideZeros": false,
                   "mode": "single",
                   "sort": "none"
-                },
-                "xField": "time",
-                "xTickLabelRotation": 0,
-                "xTickLabelSpacing": 100
+                }
               },
               "fieldConfig": {
                 "defaults": {
@@ -1902,16 +1897,29 @@
                     "axisColorMode": "text",
                     "axisLabel": "",
                     "axisPlacement": "auto",
-                    "fillOpacity": 100,
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 0,
                     "gradientMode": "none",
                     "hideFrom": {
                       "legend": false,
                       "tooltip": false,
                       "viz": false
                     },
-                    "lineWidth": 0,
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "pointSize": 5,
                     "scaleDistribution": {
                       "type": "linear"
+                    },
+                    "showPoints": "auto",
+                    "showValues": false,
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
                     },
                     "thresholdsStyle": {
                       "mode": "off"
