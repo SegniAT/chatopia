@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM golang:1.23-alpine AS build-stage
+FROM golang:1.26-alpine AS build-stage
 
 WORKDIR /app
 
@@ -9,11 +9,14 @@ RUN go mod download
 
 COPY . /app/
 
+RUN go install github.com/a-h/templ/cmd/templ@v0.3.1020 && \
+    templ generate
+
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o=/app/bin/linux_amd64/web ./cmd/web
 
 
 # Stage 2: Deploy
-FROM alpine:3.19 AS release-stage
+FROM alpine:latest AS release-stage
 
 RUN apk add --no-cache ca-certificates tzdata
 

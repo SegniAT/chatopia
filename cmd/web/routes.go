@@ -14,6 +14,8 @@ func (app *application) routes() http.Handler {
 	dynamicMiddleware := alice.New(app.authenticate, app.requireAuthentication)
 	mux := http.NewServeMux()
 
+	mux.Handle("GET /ping", standardMiddleware.ThenFunc(app.ping))
+
 	mux.Handle("GET /", standardMiddleware.ThenFunc(app.home))
 	mux.Handle("GET /about", standardMiddleware.ThenFunc(app.about))
 
@@ -32,12 +34,9 @@ func (app *application) routes() http.Handler {
 	}
 
 	mux.Handle("GET /assets/", http.StripPrefix("/assets", http.FileServer(http.FS(assetsFS))))
-
-	mux.Handle("GET /ping", standardMiddleware.ThenFunc(app.ping))
+	mux.Handle("GET /favicon.ico", http.RedirectHandler("/assets/favicon.ico", http.StatusMovedPermanently))
 
 	mux.Handle("GET /metrics", metricsHandler())
-
-	mux.Handle("GET /favicon.ico", http.RedirectHandler("/assets/favicon.ico", http.StatusMovedPermanently))
 
 	return mux
 }

@@ -16,6 +16,7 @@ services:
       - ENV=${ENV}
       - SESSION_SECRET=${SESSION_SECRET}
     restart: unless-stopped
+    dns: 8.8.8.8
 
   redis:
     image: redis:7-alpine
@@ -42,5 +43,34 @@ services:
       retries: 3
     restart: unless-stopped
 
+  prometheus:
+    image: prom/prometheus:v3.13.1
+    container_name: chatopia-prometheus
+    restart: unless-stopped
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--web.enable-remote-write-receiver"
+
+  grafana:
+    image: grafana/grafana:13.1.0
+    container_name: chatopia-grafana
+    restart: unless-stopped
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infra/grafana/provisioning/datasources/ds.yaml:/etc/grafana/provisioning/datasources/ds.yaml:ro
+      - ./infra/grafana/provisioning/dashboards/provider.yaml:/etc/grafana/provisioning/dashboards/provider.yaml:ro
+      - ./infra/grafana/provisioning/dashboards/json:/etc/grafana/provisioning/dashboards/json:ro
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+
 volumes:
   redis_data:
+  prometheus_data:
+  grafana_data:

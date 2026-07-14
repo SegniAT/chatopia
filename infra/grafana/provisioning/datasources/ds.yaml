@@ -1,0 +1,7 @@
+apiVersion: 1
+datasources:
+  - name: PBFA97CFB590B2093
+    type: prometheus
+    url: http://prometheus:9090
+    access: proxy
+    isDefault: true

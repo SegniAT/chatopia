@@ -14,8 +14,8 @@ var (
 
 	HTTPRequestsTotal = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "http_requests_total",
-		Help: "Total HTTP requests by status code",
-	}, []string{"status"})
+		Help: "Total HTTP requests by status code, method, and route path",
+	}, []string{"status", "method", "path"})
 
 	SessionsCreatedTotal = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "sessions_created_total",
