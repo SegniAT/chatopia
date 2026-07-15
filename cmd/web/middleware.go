@@ -7,10 +7,37 @@ import (
 	"net"
 	"net/http"
 	"runtime/debug"
+	"strings"
 
 	"github.com/SegniAT/logger"
 	"github.com/google/uuid"
 )
+
+// realIPMiddleware overrides r.RemoteAddr with the real client IP address
+// extracted from trusted proxy headers (X-Forwarded-For, X-Real-IP).
+// It must run as the first middleware so all downstream handlers and
+// middleware — including logging, rate limiting, and WebSocket upgrade —
+// read the correct client IP from r.RemoteAddr without additional calls.
+func (app *application) realIPMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.RemoteAddr = func(r *http.Request) string {
+			if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+				parts := strings.Split(xff, ",")
+				return strings.TrimSpace(parts[0])
+			}
+			if xri := r.Header.Get("X-Real-IP"); xri != "" {
+				return xri
+			}
+			ip, _, err := net.SplitHostPort(r.RemoteAddr)
+			if err != nil {
+				return r.RemoteAddr
+			}
+			return ip
+		}(r)
+
+		next.ServeHTTP(w, r)
+	})
+}
 
 func (app *application) addRequestID(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -83,35 +110,6 @@ func (app *application) requireAuthentication(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !app.isAuthenticated(r) {
 			http.Redirect(w, r, "/", http.StatusSeeOther)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
-}
-
-func (app *application) rateLimit(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if app.redis == nil {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		ip, _, err := net.SplitHostPort(r.RemoteAddr)
-		if err != nil {
-			ip = r.RemoteAddr
-		}
-
-		allowed, err := app.redis.AllowIP(r.Context(), ip, 5)
-		if err != nil {
-			slog.ErrorContext(r.Context(), "rate limiter error", slog.String("error", err.Error()))
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		if !allowed {
-			w.WriteHeader(http.StatusTooManyRequests)
-			w.Write([]byte("Rate limit exceeded!"))
 			return
 		}
 

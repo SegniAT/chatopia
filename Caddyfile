@@ -1,0 +1,43 @@
+:80 {
+    reverse_proxy web:4000
+
+    rate_limit {
+        zone general {
+            key {remote_host}
+            events 30
+            window 1m
+            match {
+                path /
+                path /about
+                path /live_users
+            }
+        }
+        zone session {
+            key {remote_host}
+            events 10
+            window 1m
+            match {
+                path /chat/
+            }
+        }
+        zone ws_upgrade {
+            key {remote_host}
+            events 10
+            window 1m
+            match {
+                path /chat-ws*
+            }
+        }
+    }
+
+    @static {
+        path /assets/*
+    }
+    header @static Cache-Control "public, max-age=31536000, immutable"
+
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+}

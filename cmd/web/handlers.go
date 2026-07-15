@@ -115,6 +115,7 @@ func (app *application) ServeWs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	client.Conn = conn
+	client.RemoteIP = r.RemoteAddr
 	client.ConnStartedAt = time.Now()
 
 	app.hub.StartMatchmaking(client)
