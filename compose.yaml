@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: chatopia-web
     ports:
       - "${APP_PORT}:${APP_PORT}"
     depends_on:
@@ -20,6 +21,7 @@ services:
 
   redis:
     image: redis:7-alpine
+    container_name: chatopia-redis
     ports:
       - "6379:6379"
     volumes:
@@ -34,6 +36,7 @@ services:
 
   peerjs-server:
     image: peerjs/peerjs-server
+    container_name: chatopia-peerjs-server
     ports:
       - "9000:9000"
     healthcheck:
@@ -45,7 +48,7 @@ services:
 
   alloy:
     image: grafana/alloy:latest
-    container_name: alloy
+    container_name: chatopia-alloy
     restart: unless-stopped
     depends_on:
       prometheus:
@@ -62,16 +65,16 @@ services:
     environment:
       - INSTANCE_NAME=${INSTANCE_NAME}
       - REDIS_ADDR=${REDIS_ADDR}
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
     command: run --storage.path=/tmp/alloy --server.http.listen-addr=0.0.0.0:12345 /etc/alloy/config.alloy
     extra_hosts:
       - "host.docker.internal:host-gateway"
     cap_add:
       - SYS_PTRACE
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     deploy:
       resources:
         limits:
@@ -85,11 +88,21 @@ services:
     ports:
       - "${PROMETHEUS_PORT:-9090}:9090"
     volumes:
-      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infra/prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml:ro
       - prometheus_data:/prometheus
     command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--config.file=/etc/prometheus/prometheus.yaml"
       - "--web.enable-remote-write-receiver"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
 
   grafana:
     image: grafana/grafana:13.1.0
@@ -105,7 +118,30 @@ services:
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
 
+  loki:
+    image: grafana/loki:3.7.3
+    container_name: chatopia-loki
+    restart: unless-stopped
+    user: root
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./loki-config.yaml:/etc/loki/local-config.yaml
+      - loki_data:/tmp/loki
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1024M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 volumes:
   redis_data:
   prometheus_data:
   grafana_data:
+  loki_data:
