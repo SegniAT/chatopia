@@ -5,7 +5,13 @@
 }
 
 :80 {
-    reverse_proxy web:4000
+    handle /peerjs* {
+        reverse_proxy peerjs-server:9000
+    }
+
+    handle {
+        reverse_proxy web:4000
+    }
 
     rate_limit {
         zone general {

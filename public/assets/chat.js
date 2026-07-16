@@ -1,3 +1,4 @@
+const IS_PROD = window.location.hostname !== "localhost";
 const MAX_CONNECT_RETRIES = 3;
 const MAX_RECONNECT_ATTEMPTS = 3;
 
@@ -29,10 +30,11 @@ function initChat() {
 	window._peerConnectRetries = 0;
 
 	const currentPeer = new Peer(peerID, {
-		host: "localhost",
-		port: 9000,
+		host: IS_PROD ? "chatopia.com" : "localhost",
+		port: IS_PROD ? 443 : 9000,
+		path: "/peerjs",
+		secure: IS_PROD,
 		debug: 1,
-		secure: false,
 		config: {
 			'iceServers': [
 				{ urls: "stun:stun.l.google.com:19302" },
