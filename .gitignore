@@ -1,10 +1,13 @@
 .env
+.env.docker
 .envrc
+
 node_modules
 tmp
 bin
+
 coverage.cov
 *.log
-ui/templates/*.go
 masterplan.excalidraw
 tls
+docker-compose.override.yml

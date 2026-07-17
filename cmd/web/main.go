@@ -29,7 +29,8 @@ func main() {
 	setupLogger(cfg.env)
 
 	redisClient, err := redis.NewClient(redis.Config{
-		Addr:     cfg.redisEnv,
+		Addr:     cfg.redisAddr,
+		Password: cfg.redisPassword,
 		PoolSize: 100,
 	})
 	if err != nil {
@@ -40,7 +41,7 @@ func main() {
 
 	go startQueueDepthPoller(context.Background(), redisClient)
 
-	slog.Info("connected to redis", "addr", cfg.redisEnv)
+	slog.Info("connected to redis", "addr", cfg.redisAddr)
 
 	session := sessions.New([]byte(cfg.secret))
 	session.Lifetime = 12 * time.Hour

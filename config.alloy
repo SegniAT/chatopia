@@ -26,6 +26,7 @@ prometheus.relabel "node_exporter" {
 // --- REDIS METRICS ---
 prometheus.exporter.redis "redis_exporter" {
     redis_addr = sys.env("REDIS_ADDR")
+    redis_password = sys.env("REDIS_PASSWORD")
 }
 
 prometheus.scrape "scrape_redis_metrics" {

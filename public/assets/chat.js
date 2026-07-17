@@ -1,4 +1,14 @@
-const IS_PROD = window.location.hostname !== "localhost";
+const IS_LOCAL_DEV = window.location.port === "4000";
+const IS_SECURE = window.location.protocol === "https:";
+
+let peerPort;
+if (IS_LOCAL_DEV) {
+	peerPort = 9000; // Hit the exposed container port directly in development
+} else {
+	// In production (or local prod containers), route directly through Caddy's entry port
+	peerPort = window.location.port || (IS_SECURE ? 443 : 80);
+}
+
 const MAX_CONNECT_RETRIES = 3;
 const MAX_RECONNECT_ATTEMPTS = 3;
 
@@ -30,10 +40,10 @@ function initChat() {
 	window._peerConnectRetries = 0;
 
 	const currentPeer = new Peer(peerID, {
-		host: IS_PROD ? "chatopia.com" : "localhost",
-		port: IS_PROD ? 443 : 9000,
+		host: window.location.hostname,
+		port: peerPort,
 		path: "/peerjs",
-		secure: IS_PROD,
+		secure: IS_SECURE && !IS_LOCAL_DEV,
 		debug: 1,
 		config: {
 			'iceServers': [

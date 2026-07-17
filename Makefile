@@ -15,7 +15,19 @@ help:
 confirm:
 	@echo -n 'Are you sure? [y/N] ' && read ans && [ $${ans: -N} = y ]
 
+# ==================================================================================== #
+# INFRASTRUCTURE
+# ==================================================================================== #
 
+## infra/up: spin up local docker development dependencies
+.PHONY: infra/up
+infra/up:
+	docker compose up redis peerjs-server alloy prometheus loki grafana
+
+## infra/down: tear down all local docker containers and preserve volumes
+.PHONY: infra/down
+infra/down:
+	docker compose down
 
 # ==================================================================================== #
 # DEVELOPMENT
@@ -24,7 +36,7 @@ confirm:
 ## run/web: run the cmd/web application
 .PHONY: run/web
 run/web:
-	go run ./cmd/web -port=${APP_PORT}
+	go run ./cmd/web
 
 ## live/templ: run templ generation in watch mode to detect all .templ files and re-create _templ.txt files on change, then send reload event to browser
 .PHONY: live/templ
@@ -36,11 +48,10 @@ live/templ:
 live/server:
 	~/go/bin/air \
 	--build.cmd "go build -o tmp/bin/main ./cmd/web/" --build.bin "tmp/bin/main" --build.delay "100" \
-	--build.args_bin "-port ${APP_PORT} -secret ${SESSION_SECRET} -env ${ENV}" \
 	--build.exclude_dir "node_modules" \
 	--build.include_ext "go" \
 	--build.stop_on_error "false" \
-	--misc.clean_on_exit true 
+	--misc.clean_on_exit true
 
 ## live/tailwind: run tailwindcss to generate the styles.css bundle in watch mode.
 .PHONY: live/tailwind
