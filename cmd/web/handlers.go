@@ -94,7 +94,7 @@ func (app *application) chat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	chatType := client.ChatType
-	component := templates.Chat(fmt.Sprintf("Chat | %s", strings.ToUpper(chatType)), chatType == "video", client.Interests, app.hub.ClientCount())
+	component := templates.Chat(fmt.Sprintf("Chat | %s", strings.ToUpper(chatType)), chatType == "video", client.Interests, app.hub.ClientCount(), app.config.turnUser, app.config.turnCredential)
 	component.Render(r.Context(), w)
 }
 

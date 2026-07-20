@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-templ Chat(title string, video bool, interests []string, liveUsers int64) {
+templ Chat(title string, video bool, interests []string, liveUsers int64, turnUser, turnPass string) {
 	@Base(title, liveUsers) {
 		<div
 			class="flex-1 flex flex-col min-h-0"
@@ -24,18 +24,20 @@ templ Chat(title string, video bool, interests []string, liveUsers int64) {
 				}
 			</div>
 			<script src="/assets/chat.js"></script>
-			@ChatInner(uuid.Nil, uuid.Nil, true, video)
+			@ChatInner(uuid.Nil, uuid.Nil, true, video, turnUser, turnPass)
 		</div>
 	}
 }
 
-templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video bool) {
+templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video bool, turnUser, turnPass string) {
 	<div
 		id="chat_inner"
 		data-peer-id={ peerID.String() }
 		data-stranger-peer-id={ strangerPeerID.String() }
 		data-is-caller={ strconv.FormatBool(isCaller) }
 		data-video={ strconv.FormatBool(video) }
+		data-turn-user={ turnUser }
+		data-turn-pass={ turnPass }
 		class="grow"
 		hx-swap-oob="outerHTML"
 	>

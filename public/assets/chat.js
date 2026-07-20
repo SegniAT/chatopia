@@ -22,6 +22,8 @@ function initChat() {
 	const strangerPeerID = el.dataset.strangerPeerId;
 	const isCaller = el.dataset.isCaller === "true";
 	const video = el.dataset.video === "true";
+	const turnUser = el.dataset.turnUser;
+	const turnPass = el.dataset.turnPass;
 
 	if (window.peer) {
 		console.info("Destroying previous Peer object.");
@@ -47,8 +49,11 @@ function initChat() {
 		debug: 1,
 		config: {
 			'iceServers': [
-				{ urls: "stun:stun.l.google.com:19302" },
-				{ urls: "turn:turn.bistri.com:80", username: "homeo", credential: "homeo" }
+				{ urls: "stun:stun.relay.metered.ca:80" },
+				{ urls: "turn:standard.relay.metered.ca:80", username: turnUser, credential: turnPass },
+				{ urls: "turn:standard.relay.metered.ca:80?transport=tcp", username: turnUser, credential: turnPass },
+				{ urls: "turn:standard.relay.metered.ca:443", username: turnUser, credential: turnPass },
+				{ urls: "turns:standard.relay.metered.ca:443?transport=tcp", username: turnUser, credential: turnPass },
 			]
 		}
 	});

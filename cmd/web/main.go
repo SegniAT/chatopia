@@ -50,7 +50,7 @@ func main() {
 	app := &application{
 		config:  cfg,
 		session: session,
-		hub:     matchmaking.NewHub(context.Background(), redisClient),
+		hub:     matchmaking.NewHub(context.Background(), redisClient, cfg.turnUser, cfg.turnCredential),
 		redis:   redisClient,
 	}
 

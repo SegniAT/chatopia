@@ -103,7 +103,7 @@ func InterestInput(interests []string, interestsError error) templ.Component {
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<p>Interests <span class=\"text-chatopia-4\">(optional)</span>:</p><div class=\"flex flex-col items-start\"><div id=\"interest_pills\" class=\"flex gap-2 py-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<p>Interests <span class=\"text-chatopia-4\">(optional. examples: football, gaming, movies)</span>:</p><div class=\"flex flex-col items-start\"><div id=\"interest_pills\" class=\"flex gap-2 py-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

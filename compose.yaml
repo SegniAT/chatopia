@@ -15,6 +15,8 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - ENV=${ENV}
       - SESSION_SECRET=${SESSION_SECRET}
+      - TURN_USERNAME=${TURN_USERNAME}
+      - TURN_CREDENTIAL=${TURN_CREDENTIAL}
     restart: unless-stopped
 
   redis:

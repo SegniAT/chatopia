@@ -43,16 +43,21 @@ type Hub struct {
 	clientWg  sync.WaitGroup
 
 	receive chan *Message
+
+	TurnUser       string
+	TurnCredential string
 }
 
-func NewHub(ctx context.Context, redisClient *redis.Client) *Hub {
+func NewHub(ctx context.Context, redisClient *redis.Client, turnUser string, turnCredential string) *Hub {
 	ctx, cancel := context.WithCancel(ctx)
 	return &Hub{
-		RedisClient: redisClient,
-		Notifier:    redis.NewNotifier(redisClient),
-		ctx:         ctx,
-		cancel:      cancel,
-		receive:     make(chan *Message, 256),
+		RedisClient:    redisClient,
+		Notifier:       redis.NewNotifier(redisClient),
+		ctx:            ctx,
+		cancel:         cancel,
+		receive:        make(chan *Message, 256),
+		TurnUser:       turnUser,
+		TurnCredential: turnCredential,
 	}
 }
 
@@ -381,7 +386,7 @@ func (h *Hub) connectPairedClients(c1 *Client, partner *redis.Session) {
 
 	renderAndSend := func(c *Client, peerID, strangerPeerID uuid.UUID, isCaller bool) {
 		buf := bytes.NewBuffer(nil)
-		templates.ChatInner(peerID, strangerPeerID, isCaller, c.ChatType == "video").
+		templates.ChatInner(peerID, strangerPeerID, isCaller, c.ChatType == "video", h.TurnUser, h.TurnCredential).
 			Render(h.ctx, buf)
 		c.SendMessage(buf.Bytes())
 	}
