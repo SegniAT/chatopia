@@ -49,12 +49,18 @@ function initChat() {
 		debug: 1,
 		config: {
 			'iceServers': [
-				{ urls: "stun:stun.relay.metered.ca:80" },
-				{ urls: "turn:standard.relay.metered.ca:80", username: turnUser, credential: turnPass },
-				{ urls: "turn:standard.relay.metered.ca:80?transport=tcp", username: turnUser, credential: turnPass },
-				{ urls: "turn:standard.relay.metered.ca:443", username: turnUser, credential: turnPass },
-				{ urls: "turns:standard.relay.metered.ca:443?transport=tcp", username: turnUser, credential: turnPass },
-			]
+				{
+					urls: "stun:stun.relay.metered.ca:80"
+				},
+				{
+					urls: [
+						"turn:standard.relay.metered.ca:80",
+						"turn:standard.relay.metered.ca:443",
+						"turns:standard.relay.metered.ca:443?transport=tcp"
+					],
+					username: turnUser,
+					credential: turnPass
+				}]
 		}
 	});
 

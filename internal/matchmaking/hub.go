@@ -83,8 +83,6 @@ func (h *Hub) RegisterClient(client *Client) error {
 	}
 
 	h.clients.Store(client.SessionID, client)
-	h.clientCount.Add(1)
-	metrics.ActiveClients.Inc()
 	metrics.SessionsCreatedTotal.Inc()
 
 	slog.Info("client registered",
@@ -269,6 +267,8 @@ func (h *Hub) Stop() {
 }
 
 func (h *Hub) ClientConnected(client *Client) {
+	h.clientCount.Add(1)
+	metrics.ActiveClients.Inc()
 	h.clientWg.Go(func() {
 		client.WritePump()
 	})

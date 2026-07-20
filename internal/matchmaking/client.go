@@ -19,6 +19,7 @@ const (
 type Client struct {
 	Hub  *Hub            `json:"-"`
 	send chan []byte     `json:"-"`
+	done chan struct{}   `json:"-"`
 	Conn *websocket.Conn `json:"-"`
 
 	SessionID   string   `json:"session_id"`
@@ -50,6 +51,7 @@ func NewClient(sessionID string, chatType string, isStrict bool, interests []str
 		IsStrict:  isStrict,
 		Interests: interests,
 		send:      make(chan []byte, 256),
+		done:      make(chan struct{}),
 	}
 }
 
@@ -82,6 +84,7 @@ func (client *Client) ReadPump() {
 	})
 
 	for {
+		// WritePump's defer calls conn.Close(), this unblocks ReadJSON immediately triggering the deferred UnregisterClient and exiting the function.
 		select {
 		case <-client.Hub.ctx.Done():
 			slog.Info("closing ReadPump (HUB context cancellation)")
@@ -107,6 +110,7 @@ func (client *Client) WritePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
+		close(client.done)
 		client.Conn.Close()
 
 		if r := recover(); r != nil {
@@ -148,7 +152,10 @@ func (client *Client) WritePump() {
 }
 
 func (client *Client) SendMessage(message []byte) {
-	client.send <- message
+	select {
+	case client.send <- message:
+	case <-client.done:
+	}
 }
 
 func (client *Client) Connect(partner *Client) error {
