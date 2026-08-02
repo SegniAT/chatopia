@@ -252,13 +252,13 @@ function setupChat(connection) {
 
 function newChatBubble(message, isMe) {
 	const wrapper = document.createElement("div");
-	wrapper.classList.add("flex", "gap-1", "w-full", "text-sm", "sm:text-base", isMe ? "justify-end" : "justify-start");
+	wrapper.classList.add("flex", "gap-1", "w-full", "text-sm", "sm:text-base", "text-white", isMe ? "justify-end" : "justify-start");
 
 	const innerWrapper = document.createElement("div");
 	if (isMe) {
-		innerWrapper.classList.add("flex", "gap-2", "p-2", "rounded-lg", "max-w-xs", "bg-blue-500", "text-white", "min-w-0");
+		innerWrapper.classList.add("flex", "gap-2", "p-2", "rounded-lg", "max-w-xs", "bg-chatopia-1", "min-w-0");
 	} else {
-		innerWrapper.classList.add("flex", "gap-2", "p-2", "rounded-lg", "max-w-xs", "bg-gray-200", "text-gray-800", "min-w-0");
+		innerWrapper.classList.add("flex", "gap-2", "p-2", "rounded-lg", "max-w-xs", "bg-chatopia-3", "min-w-0");
 	}
 
 	const msg = document.createElement("p");

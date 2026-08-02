@@ -183,12 +183,12 @@ func ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video 
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "\" class=\"grow\" hx-swap-oob=\"outerHTML\"><div id=\"error_message\" class=\"hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-2\"><span id=\"error_text\"></span> <button onclick=\"this.parentElement.classList.add('hidden')\" class=\"float-right font-bold\">&times;</button></div><div class=\"flex flex-col sm:flex-row py-4 gap-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "\" hx-swap-oob=\"outerHTML\"><div id=\"error_message\" class=\"hidden flex items-start justify-between gap-2 border border-red-400 text-red-700 px-4 py-3 rounded mb-2 mx-auto max-w-fit\"><span id=\"error_text\"></span> <button onclick=\"this.parentElement.classList.add('hidden')\" class=\"shrink-0 font-bold text-2xl leading-none\">&times;</button></div><div class=\"flex flex-col sm:flex-row py-4 gap-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if video {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<div class=\"\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<div class=\"sm:w-3/4\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -201,7 +201,7 @@ func ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video 
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<div class=\"flex-grow\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<div class=\"flex-grow min-w-0\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -213,9 +213,11 @@ func ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video 
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = ActionButton_NewChat().Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
+		if !video {
+			templ_7745c5c3_Err = ActionButton_NewChat().Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 		}
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<script>initChat()</script></div>")
 		if templ_7745c5c3_Err != nil {

@@ -1,26 +1,29 @@
 package templates
 
 templ TextChat() {
-	<div
-		class="flex-grow flex flex-col"
-	>
-		<div class="flex-grow flex flex-col p-2 my-2 shadow-sm shadow-chatopia-1 rounded-md overflow-y-scroll h-[40vh] sm:h-[70vh] scrollbar-chatopia">
+	<div class="border-[1px] border-chatopia-3 rounded-md max-w-3xl mx-auto">
+		<h1 class="p-2 text-lg font-bold text-chatopia-5 border-b-[1px] border-chatopia-3">CHAT</h1>
+		<div class="flex-grow flex flex-col p-2 my-2 overflow-y-scroll h-[40vh] scrollbar-chatopia">
 			<div id="chat_bubbles" class="flex flex-col gap-1 pb-1"></div>
 			<div id="chat_typing"></div>
 		</div>
-		<div>
-			<form id="chat_form" class="flex items-end gap-2">
-				<textarea
-					id="chat_message"
-					name="chat_message"
-					class="rounded-md text-chatopia-2 p-2 resize"
-					maxlength="500"
-					ws-send
-					hx-vals='{"message_type":"typing"}'
-					hx-trigger="keyup changed throttle:3s"
-				></textarea>
-				<button id="send_chat_button" type="button" class="px-2 bg-chatopia-1 text-chatopia-2 rounded-md">Send</button>
-			</form>
-		</div>
+		<form id="chat_form" class="flex items-center h-14 p-1 border-chatopia-3 border-t-[1px] overflow-hidden">
+			<textarea
+				id="chat_message"
+				name="chat_message"
+				rows="1"
+				class="rounded-md text-chatopia-2 px-2 py-3 h-full min-h-0 flex-grow resize-none leading-none focus:outline-none"
+				maxlength="200"
+				ws-send
+				hx-vals='{"message_type":"typing"}'
+				hx-trigger="keyup changed throttle:3s"
+				placeholder="Type a message..."
+			></textarea>
+			<button id="send_chat_button" type="button" class="px-2 rounded-md h-full flex items-center justify-center">
+				<svg class="w-5 h-5 fill-chatopia-1 drop-shadow-[0_0_3px_black]">
+					<use href="/assets/icons.svg#paper-plane"></use>
+				</svg>
+			</button>
+		</form>
 	</div>
 }

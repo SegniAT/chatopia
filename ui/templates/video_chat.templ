@@ -1,30 +1,29 @@
 package templates
 
 templ VideoChat() {
-	<script>
-	</script>
-	<div class="flex justify-center sm:flex-col gap-2">
-		<div class="relative">
-			<video id="remote_video" class="h-36 w-36 sm:h-80 sm:w-80 border-2 rounded-md border-chatopia-3" autoplay style="object-fit: cover; background-image: url('/assets/video_placeholder.gif'); background-size: cover; background-position: center; background-repeat: no-repeat;"></video>
+	<div class="flex flex-col gap-2">
+		<div class="relative aspect-[4/3]">
+			<video id="remote_video" class="absolute inset-0 w-full h-full object-cover border-2 rounded-md border-chatopia-3" autoplay style="background-image: url('/assets/video_placeholder.gif'); background-size: cover; background-position: center; background-repeat: no-repeat;"></video>
 			<svg id="remote_volume_indicator" class="absolute top-2 sm:top-8 right-2 sm:right-8 w-5 h-5 fill-chatopia-1 drop-shadow-[0_0_3px_black]" style="opacity: 0.15;">
 				<use href="/assets/icons.svg#mic-on"></use>
 			</svg>
-			<div id="remote_video_ctrl" class="absolute bottom-2 sm:bottom-4 left-2 sm:left-8 flex gap-2 mt-1 justify-center">
+			<div id="remote_video_ctrl" class="absolute bottom-2 sm:bottom-4 left-2 sm:left-8 flex gap-2 justify-center">
 				<button id="remote_mute_button" onclick="toggleMuteRemote()" class="flex items-center justify-center w-8 h-8">
 					<svg class="w-5 h-5 fill-white drop-shadow-[0_0_3px_black]"><use href="/assets/icons.svg#muted"></use></svg>
 				</button>
 			</div>
-		</div>
-		<div class="relative">
-			<video id="local_video" class="h-36 w-36 sm:h-80 sm:w-80 border-2 rounded-md border-chatopia-3" autoplay muted style="object-fit: cover;"></video>
-			<div id="local_video_ctrl" class="absolute bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 flex gap-2 mt-1 justify-center">
-				<button id="mute_button" onclick="toggleMute()" class="flex items-center justify-center w-8 h-8">
-					<svg class="w-5 h-5 fill-white drop-shadow-[0_0_3px_black]"><use href="/assets/icons.svg#mic-on"></use></svg>
-				</button>
-				<button id="camera_button" onclick="toggleCamera()" class="flex items-center justify-center w-8 h-8">
-					<svg class="w-5 h-5 fill-white drop-shadow-[0_0_3px_black]"><use href="/assets/icons.svg#cam-on"></use></svg>
-				</button>
+			<div class="absolute aspect-[4/3] w-1/4 right-2 bottom-2">
+				<video id="local_video" class="absolute inset-0 w-full h-full object-cover border-2 rounded-md border-chatopia-3" autoplay muted></video>
 			</div>
+		</div>
+		<div id="local_video_ctrl" class="flex justify-center items-center gap-1 md:gap-2 p-1 lg:p-3 bg-chatopia-3/80 border-[1px] border-chatopia-4 rounded-md mx-auto max-w-64">
+			@ActionButton_NewChat()
+			<button id="mute_button" onclick="toggleMute()" class="flex items-center justify-center p-1 md:p-2 rounded-md bg-chatopia-2/50 hover:bg-chatopia-4">
+				<svg class="w-4 h-4 md:w-6 md:h-6 fill-white drop-shadow-[0_0_3px_black]"><use href="/assets/icons.svg#mic-on"></use></svg>
+			</button>
+			<button id="camera_button" onclick="toggleCamera()" class="flex items-center justify-center p-1 md:p-2 rounded-md bg-chatopia-2/50 hover:bg-chatopia-4">
+				<svg class="w-4 h-4 md:w-6 md:h-6 fill-white drop-shadow-[0_0_3px_black]"><use href="/assets/icons.svg#cam-on"></use></svg>
+			</button>
 		</div>
 	</div>
 }

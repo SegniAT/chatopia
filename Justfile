@@ -27,18 +27,34 @@ infra-down:
 run-web:
     go run ./cmd/web
 
+# Pre-create tmp directory to prevent Air concurrency race conditions
+prep-tmp:
+    @mkdir -p tmp tmp/sync
+
 # Run templ generation in watch mode
 live-templ:
     ~/go/bin/templ generate --watch --proxy="http://localhost:{{APP_PORT}}" -v
 
 # Run air to detect Go file changes and hot-reload
-live-server:
+live-server: prep-tmp
     ~/go/bin/air \
-        --build.cmd "go build -o tmp/bin/main ./cmd/web/" --build.bin "tmp/bin/main" --build.delay "100" \
+        --build.cmd "go build -o tmp/bin/main ./cmd/web/" \
+        --build.bin "tmp/bin/main" \
+        --build.delay "100" \
         --build.exclude_dir "node_modules" \
         --build.include_ext "go" \
-        --build.stop_on_error "false" \
-        --misc.clean_on_exit true
+        --build.stop_on_error "false"
+
+# Sync asset updates through templ proxy
+live-sync-assets: prep-tmp
+    ~/go/bin/air \
+        -tmp_dir "tmp/sync" \
+        --build.cmd "~/go/bin/templ generate --notify-proxy" \
+        --build.bin "true" \
+        --build.delay "100" \
+        --build.exclude_dir "node_modules" \
+        --build.include_dir "public" \
+        --build.include_ext "js,css"
 
 # Run tailwindcss watcher
 live-tailwind:
@@ -48,19 +64,9 @@ live-tailwind:
 live-esbuild:
     npx esbuild ./ui/index.ts --bundle --outdir=./public/assets/ --watch=forever
 
-# Sync asset updates through templ proxy
-live-sync-assets:
-    ~/go/bin/air \
-        --build.cmd "~/go/bin/templ generate --notify-proxy" \
-        --build.bin "true" \
-        --build.delay "100" \
-        --build.exclude_dir "node_modules" \
-        --build.include_dir "public" \
-        --build.include_ext "js,css"
-
 # Start all 5 watch processes in parallel
-live:
-    just --parallel live-templ live-server live-tailwind live-esbuild live-sync-assets
+[parallel]
+live: live-templ live-server live-tailwind live-esbuild live-sync-assets
 
 # ==================================================================================== #
 # QUALITY CONTROL

@@ -38,24 +38,25 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 		data-video={ strconv.FormatBool(video) }
 		data-turn-user={ turnUser }
 		data-turn-pass={ turnPass }
-		class="grow"
 		hx-swap-oob="outerHTML"
 	>
-		<div id="error_message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-2">
+		<div id="error_message" class="hidden flex items-start justify-between gap-2 border border-red-400 text-red-700 px-4 py-3 rounded mb-2 mx-auto max-w-fit">
 			<span id="error_text"></span>
-			<button onclick="this.parentElement.classList.add('hidden')" class="float-right font-bold">&times;</button>
+			<button onclick="this.parentElement.classList.add('hidden')" class="shrink-0 font-bold text-2xl leading-none">&times;</button>
 		</div>
 		<div class="flex flex-col sm:flex-row py-4 gap-2">
 			if video {
-				<div class="">
+				<div class="sm:w-3/4">
 					@VideoChat()
 				</div>
 			}
-			<div class="flex-grow">
+			<div class="flex-grow min-w-0">
 				@TextChat()
 			</div>
 		</div>
-		@ActionButton_NewChat()
+		if !video {
+			@ActionButton_NewChat()
+		}
 		<script>initChat()</script>
 	</div>
 }
