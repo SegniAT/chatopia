@@ -57,7 +57,7 @@ templ ActionButton_NewChat() {
 		<button
 			onclick="if(window._activeCall){window._activeCall.close();window._activeCall=null}if(window.peer){window.peer.destroy();}var r=document.querySelector('#remote_video');if(r)r.srcObject=null;"
 			id="action_button"
-			class="border bg-chatopia-1 border-chatopia-3 text-chatopia-2 p-1 md:p-2 font-semibold hover:bg-chatopia-1/80 text-sm md:text-lg"
+			class="border bg-chatopia-1 border-chatopia-3 text-white p-1 md:p-2 font-light hover:bg-chatopia-1/80 text-sm md:text-lg"
 			type="button"
 			ws-send
 			hx-vals='{"message_type":"new_connection"}'

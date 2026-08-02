@@ -191,7 +191,7 @@ templ Home(title string, isStrict bool, interests []string, liveUsers int64) {
 		});
 
 	</script>
-	@Base(title, liveUsers) {
+	@Base(title, liveUsers, false) {
 		<div class="py-7 sm:py-10 flex flex-col lg:flex-row justify-between items-center relative bg-chatopia-2">
 			<div class="lg:order-2">
 				<img

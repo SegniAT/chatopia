@@ -10,7 +10,15 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "time"
 
-func Base(title string, liveUsers int64) templ.Component {
+func bodyClassAttr(locked bool) string {
+	classes := "flex flex-col bg-chatopia-2 text-chatopia-5 max-w-7xl mx-auto px-2 sm:px-8 md:px-12 lg:px-4"
+	if locked {
+		return classes + " h-dvh"
+	}
+	return classes + " min-h-full"
+}
+
+func Base(title string, liveUsers int64, locked bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -38,13 +46,35 @@ func Base(title string, liveUsers int64) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/base.templ`, Line: 9, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/base.templ`, Line: 17, Col: 17}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><script src=\"/assets/htmx.min.js\"></script><script src=\"/assets/htmx-ext-ws.js\"></script><script src=\"/assets/peerjs.min.js\"></script><link rel=\"apple-touch-icon\" sizes=\"180x180\" href=\"/assets/apple-touch-icon.png\"><link rel=\"icon\" type=\"image/png\" sizes=\"32x32\" href=\"/assets/favicon-32x32.png\"><link rel=\"icon\" type=\"image/png\" sizes=\"16x16\" href=\"/assets/favicon-16x16.png\"><link rel=\"manifest\" href=\"/assets/site.webmanifest\"><link rel=\"stylesheet\" href=\"/assets/style.css\"></head><body class=\"flex flex-col min-h-full bg-chatopia-2 text-chatopia-5 max-w-7xl mx-auto px-2 sm:px-8 md:px-12 lg:px-4\"><script>\n\t\t\t\tdocument.body.addEventListener(\"htmx:wsOpen\", (evt) => {\n\t\t\t\t\twindow.socketWrapper = evt.detail.socketWrapper;\n\t\t\t\t});\n\n\t\t\t\tdocument.body.addEventListener(\"htmx:wsClose\", (evt) => {\n\t\t\t\t\twindow.socketWrapper = null;\n\t\t\t\t});\n\t\t\t</script><header>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><script src=\"/assets/htmx.min.js\"></script><script src=\"/assets/htmx-ext-ws.js\"></script><script src=\"/assets/peerjs.min.js\"></script><link rel=\"apple-touch-icon\" sizes=\"180x180\" href=\"/assets/apple-touch-icon.png\"><link rel=\"icon\" type=\"image/png\" sizes=\"32x32\" href=\"/assets/favicon-32x32.png\"><link rel=\"icon\" type=\"image/png\" sizes=\"16x16\" href=\"/assets/favicon-16x16.png\"><link rel=\"manifest\" href=\"/assets/site.webmanifest\"><link rel=\"stylesheet\" href=\"/assets/style.css\"></head>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var3 = []any{bodyClassAttr(locked)}
+		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var3...)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<body class=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var4 string
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var3).String())
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/base.templ`, Line: 1, Col: 0}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\"><script>\n\t\t\t\tdocument.body.addEventListener(\"htmx:wsOpen\", (evt) => {\n\t\t\t\t\twindow.socketWrapper = evt.detail.socketWrapper;\n\t\t\t\t});\n\n\t\t\t\tdocument.body.addEventListener(\"htmx:wsClose\", (evt) => {\n\t\t\t\t\twindow.socketWrapper = null;\n\t\t\t\t});\n\t\t\t</script><header>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -52,7 +82,7 @@ func Base(title string, liveUsers int64) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</header><main class=\"grow flex flex-col min-h-0\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</header><main class=\"grow flex flex-col min-h-0 overflow-y-auto scrollbar-chatopia\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -60,20 +90,30 @@ func Base(title string, liveUsers int64) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</main><footer class=\"border-t border-chatopia-3/50 py-6 mt-6 text-sm text-chatopia-5/70 text-center\"><p>&copy; ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</main>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(time.Now().Year())
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/base.templ`, Line: 48, Col: 33}
+		if !locked {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<footer class=\"border-t border-chatopia-3/50 py-6 mt-6 text-sm text-chatopia-5/70 text-center\"><p>&copy; ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var5 string
+			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(time.Now().Year())
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/templates/base.templ`, Line: 57, Col: 34}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, " Chatopia. Built for Ethiopia, with ❤️ and WebRTC.</p><a href=\"/about\" class=\"hover:text-chatopia-1 underline\">About</a></footer>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, " Chatopia. Built for Ethiopia, with ❤️ and WebRTC.</p><a href=\"/about\" class=\"hover:text-chatopia-1 underline\">About</a></footer></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -97,12 +137,12 @@ func Navigation(liveUsers int64) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var4 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var4 == nil {
-			templ_7745c5c3_Var4 = templ.NopComponent
+		templ_7745c5c3_Var6 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var6 == nil {
+			templ_7745c5c3_Var6 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<nav class=\"text-xl\"><ul class=\"flex flex-col [@media(min-width:280px)]:flex-row [@media(min-width:280px)]:items-center [@media(min-width:280px)]:justify-between gap-2 border-b border-b-chatopia-3 p-4\"><li><a href=\"/\"><img class=\"h-5 sm:h-8\" src=\"/assets/logo.png\"></a></li><div class=\"flex gap-4\"><li>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<nav class=\"text-xl\"><ul class=\"flex flex-col [@media(min-width:280px)]:flex-row [@media(min-width:280px)]:items-center [@media(min-width:280px)]:justify-between gap-2 border-b border-b-chatopia-3 p-4\"><li><a href=\"/\"><img class=\"h-5 sm:h-8\" src=\"/assets/logo.png\"></a></li><div class=\"flex gap-4\"><li>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -110,7 +150,7 @@ func Navigation(liveUsers int64) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</li><li><a class=\"hover:text-chatopia-1 text-sm sm:text-base\" href=\"/about\">About</a></li></div></ul></nav>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</li><li><a class=\"hover:text-chatopia-1 text-sm sm:text-base\" href=\"/about\">About</a></li></div></ul></nav>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

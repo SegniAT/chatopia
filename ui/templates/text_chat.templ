@@ -1,9 +1,9 @@
 package templates
 
 templ TextChat() {
-	<div class="border-[1px] border-chatopia-3 rounded-md max-w-3xl mx-auto">
+	<div class="flex flex-col border-[1px] border-chatopia-3 rounded-md h-full">
 		<h1 class="p-2 text-lg font-bold text-chatopia-5 border-b-[1px] border-chatopia-3">CHAT</h1>
-		<div class="flex-grow flex flex-col p-2 my-2 overflow-y-scroll h-[40vh] scrollbar-chatopia">
+		<div class="flex-grow min-h-0 flex flex-col p-2 my-2 overflow-y-scroll scrollbar-chatopia">
 			<div id="chat_bubbles" class="flex flex-col gap-1 pb-1"></div>
 			<div id="chat_typing"></div>
 		</div>
@@ -12,14 +12,14 @@ templ TextChat() {
 				id="chat_message"
 				name="chat_message"
 				rows="1"
-				class="rounded-md text-chatopia-2 px-2 py-3 h-full min-h-0 flex-grow resize-none leading-none focus:outline-none"
+				class="rounded-md text-chatopia-2 px-2 py-3 h-full min-h-0 flex-grow resize-none leading-none focus:outline-none min-w-0"
 				maxlength="200"
 				ws-send
 				hx-vals='{"message_type":"typing"}'
 				hx-trigger="keyup changed throttle:3s"
 				placeholder="Type a message..."
 			></textarea>
-			<button id="send_chat_button" type="button" class="px-2 rounded-md h-full flex items-center justify-center">
+			<button id="send_chat_button" type="button" class="px-2 rounded-md h-full flex items-center justify-center shrink-0">
 				<svg class="w-5 h-5 fill-chatopia-1 drop-shadow-[0_0_3px_black]">
 					<use href="/assets/icons.svg#paper-plane"></use>
 				</svg>

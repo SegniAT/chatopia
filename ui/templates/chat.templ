@@ -6,7 +6,7 @@ import (
 )
 
 templ Chat(title string, video bool, interests []string, liveUsers int64, turnUser, turnPass string) {
-	@Base(title, liveUsers) {
+	@Base(title, liveUsers, true) {
 		<div
 			class="flex-1 flex flex-col min-h-0"
 			hx-ext="ws"
@@ -38,19 +38,20 @@ templ ChatInner(peerID uuid.UUID, strangerPeerID uuid.UUID, isCaller bool, video
 		data-video={ strconv.FormatBool(video) }
 		data-turn-user={ turnUser }
 		data-turn-pass={ turnPass }
+		class="flex flex-col flex-1 min-h-0 pb-4"
 		hx-swap-oob="outerHTML"
 	>
 		<div id="error_message" class="hidden flex items-start justify-between gap-2 border border-red-400 text-red-700 px-4 py-3 rounded mb-2 mx-auto max-w-fit">
 			<span id="error_text"></span>
 			<button onclick="this.parentElement.classList.add('hidden')" class="shrink-0 font-bold text-2xl leading-none">&times;</button>
 		</div>
-		<div class="flex flex-col sm:flex-row py-4 gap-2">
+		<div class="flex flex-col sm:flex-row py-4 gap-2 flex-1 min-h-0">
 			if video {
-				<div class="sm:w-3/4">
+				<div class="sm:w-3/4 min-h-0">
 					@VideoChat()
 				</div>
 			}
-			<div class="flex-grow min-w-0">
+			<div class="flex-grow min-w-0 flex flex-col min-h-0">
 				@TextChat()
 			</div>
 		</div>

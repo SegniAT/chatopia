@@ -2,7 +2,15 @@ package templates
 
 import "time"
 
-templ Base(title string, liveUsers int64) {
+func bodyClassAttr(locked bool) string {
+	classes := "flex flex-col bg-chatopia-2 text-chatopia-5 max-w-7xl mx-auto px-2 sm:px-8 md:px-12 lg:px-4"
+	if locked {
+		return classes + " h-dvh"
+	}
+	return classes + " min-h-full"
+}
+
+templ Base(title string, liveUsers int64, locked bool) {
 	<!DOCTYPE html>
 	<html class="h-full">
 		<head>
@@ -28,7 +36,7 @@ templ Base(title string, liveUsers int64) {
 			</main>
 			This prevents an inherited min-height: min-content from blocking inner flex growth
 		*/
-		<body class="flex flex-col min-h-full bg-chatopia-2 text-chatopia-5 max-w-7xl mx-auto px-2 sm:px-8 md:px-12 lg:px-4">
+		<body class={ bodyClassAttr(locked) }>
 			<script>
 				document.body.addEventListener("htmx:wsOpen", (evt) => {
 					window.socketWrapper = evt.detail.socketWrapper;
@@ -41,13 +49,15 @@ templ Base(title string, liveUsers int64) {
 			<header>
 				@Navigation(liveUsers)
 			</header>
-			<main class="grow flex flex-col min-h-0">
+			<main class="grow flex flex-col min-h-0 overflow-y-auto scrollbar-chatopia">
 				{ children... }
 			</main>
-			<footer class="border-t border-chatopia-3/50 py-6 mt-6 text-sm text-chatopia-5/70 text-center">
-				<p>&copy; { time.Now().Year() } Chatopia. Built for Ethiopia, with ❤️ and WebRTC.</p>
-				<a href="/about" class="hover:text-chatopia-1 underline">About</a>
-			</footer>
+			if !locked {
+				<footer class="border-t border-chatopia-3/50 py-6 mt-6 text-sm text-chatopia-5/70 text-center">
+					<p>&copy; { time.Now().Year() } Chatopia. Built for Ethiopia, with ❤️ and WebRTC.</p>
+					<a href="/about" class="hover:text-chatopia-1 underline">About</a>
+				</footer>
+			}
 		</body>
 	</html>
 }

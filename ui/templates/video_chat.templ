@@ -2,7 +2,7 @@ package templates
 
 templ VideoChat() {
 	<div class="flex flex-col gap-2">
-		<div class="relative aspect-[4/3]">
+		<div class="relative aspect-[4/3] sm:max-h-[60vh]">
 			<video id="remote_video" class="absolute inset-0 w-full h-full object-cover border-2 rounded-md border-chatopia-3" autoplay style="background-image: url('/assets/video_placeholder.gif'); background-size: cover; background-position: center; background-repeat: no-repeat;"></video>
 			<svg id="remote_volume_indicator" class="absolute top-2 sm:top-8 right-2 sm:right-8 w-5 h-5 fill-chatopia-1 drop-shadow-[0_0_3px_black]" style="opacity: 0.15;">
 				<use href="/assets/icons.svg#mic-on"></use>
